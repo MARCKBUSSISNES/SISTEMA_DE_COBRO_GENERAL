@@ -124,14 +124,12 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
         <datalist id="productsDatalist"></datalist>
       </div>
 
-      <!-- AÑADIDO: select desplegable -->
       <div style="margin-top:8px;">
         <label class="small-note">O seleccionar desde la lista:</label>
         <select id="productSelect" style="width:100%;padding:10px;border-radius:10px;background:var(--dark);color:var(--light);border:1px solid #333;">
           <option value="">-- Seleccionar producto --</option>
         </select>
       </div>
-
       <p class="small-note">Selecciona producto y cantidad para agregar al carrito.</p>
     </div>
 
@@ -230,7 +228,6 @@ function renderProducts(){
   });
   productsDatalist.innerHTML = '';
   products.forEach(p=>{ const op=document.createElement('option'); op.value=p.name; productsDatalist.appendChild(op); });
-
   if(productSelect){
     productSelect.innerHTML = '<option value="">-- Seleccionar producto --</option>';
     products.forEach((p, idx) => {
@@ -297,8 +294,7 @@ addFilterBtn.onclick = ()=>{
 productSelect.addEventListener('change', ()=>{
   const idx = parseInt(productSelect.value);
   if(!isNaN(idx)){
-    const prod = products[idx];
-    filterInput.value = prod.name;
+    filterInput.value = products[idx].name;
     filterQty.value = 1;
   }
 });
@@ -319,73 +315,84 @@ payBtn.onclick = ()=>{
   });
   saveProducts(); renderProducts();
   sales.push({ticket:ticketCounter,client,items:ventaItems,total:totalVenta,date:new Date().toISOString()});
-  saveSales(); ticketCounter++; saveTicketCounter(); cart=[]; renderCart(); renderSales();
-  try{ generateTicketPDF(ticketCounter-1, client, ventaItems, totalVenta); }catch(e){console.error(e);}
-  alert('Venta registrada');
+  saveSales(); ticketCounter++; saveTicketCounter();
+  cart=[]; renderCart(); renderSales();
+  generateTicketPDF(ventaItems,totalVenta,client);
 }
 
 function renderSales(){
-  salesList.innerHTML=''; if(sales.length===0){salesList.innerHTML='<li class="center small-note">No hay ventas hoy</li>'; salesCount.textContent='0'; salesTotal.textContent='Q0.00'; return;}
-  let totalDia=0;
-  sales.forEach(s=>{totalDia+=s.total; const li=document.createElement('li'); li.innerHTML=`Ticket ${s.ticket} ${s.client?'- '+s.client:''} <span class="right">${formatQ(s.total)}</span>`; salesList.appendChild(li);});
-  salesCount.textContent=sales.length; salesTotal.textContent=formatQ(totalDia);
+  salesList.innerHTML='';
+  let tTotal=0;
+  sales.forEach(s=>{
+    tTotal+=s.total;
+    const li = document.createElement('li');
+    li.innerHTML=`<div>Ticket ${s.ticket} - ${s.client||'Cliente'} - ${formatQ(s.total)}</div>`;
+    salesList.appendChild(li);
+  });
+  salesCount.textContent = sales.length;
+  salesTotal.textContent = formatQ(tTotal);
 }
 
 deleteSalesBtn.onclick = ()=>{
   const code = prompt("Ingrese código para borrar ventas:");
-  if(code==='3336'){ if(confirm('Borrar ventas del día?')){ sales=[]; saveSales(); renderSales(); } }
+  if(code==='3336'){ if(confirm('Borrar todas las ventas?')){ sales=[]; saveSales(); renderSales(); } }
   else{ alert("Código incorrecto"); }
 }
 
 exportProductsBtn.onclick = ()=>{
-  if(products.length===0){alert('No hay productos'); return;}
   const doc = new jsPDF();
-  const logo = new Image();
-  logo.src='LOGO1.png';
-  logo.onload=function(){
-    doc.addImage(logo,'PNG',14,8,30,30);
-    drawPDF();
-  }
-  function drawPDF(){
-    let yStart=42;
-    doc.setFontSize(18); doc.text("Inventario MarckBusiness",14,yStart);
-    doc.setFontSize(12); doc.text(`Fecha: ${new Date().toLocaleDateString()}`,14,yStart+8);
-    const head = [['#','Producto','Precio','Stock']];
-    const body = products.map((p,i)=>[i+1,p.name,formatQ(p.price),p.stock]);
-    doc.autoTable({startY:yStart+16, head:head, body:body, theme:'grid', styles:{fontSize:10}});
-    doc.setFontSize(10); doc.text(`MarckBusiness © 2025 — Todos los derechos reservados`,14,280);
-    doc.save('inventario.pdf');
-  }
+  doc.setFontSize(14); doc.text('Inventario de productos',20,20);
+  const rows = products.map(p=>[p.name, formatQ(p.price), p.stock]);
+  doc.autoTable({head:[['Producto','Precio','Stock']], body:rows, startY:30});
+  doc.save('inventario.pdf');
 }
 
-function generateTicketPDF(ticketNum, client, items, total){
-  const doc = new jsPDF({unit:'mm',format:[80,200]});
-  const pageWidth = 80;
-  let y=5;
-  const logo = new Image();
-  logo.src='LOGO1.png';
-  logo.onload=function(){
-    const logoWidth = 50;
-    doc.addImage(logo,'PNG',(pageWidth-logoWidth)/2,y,logoWidth,20);
-    y+=25;
-    drawTicket();
-  }
-  function drawTicket(){
-    doc.setFontSize(12); doc.setFont(undefined,'bold'); doc.text(`TICKET #${ticketNum}`,pageWidth/2,y,{align:'center'}); y+=6;
-    if(client){ doc.setFontSize(10); doc.setFont(undefined,'normal'); doc.text(`Cliente: ${client}`,pageWidth/2,y,{align:'center'}); y+=6; }
-    doc.setLineWidth(0.3); doc.line(2,y,pageWidth-2,y); y+=4;
-    items.forEach(it=>{
-      doc.setFontSize(10); doc.text(`${it.qty} x ${it.name}`,2,y); doc.text(formatQ(it.price),pageWidth-2,y,{align:'right'}); y+=5;
-    });
-    doc.line(2,y,pageWidth-2,y); y+=4;
-    doc.setFontSize(12); doc.setFont(undefined,'bold'); doc.text(`TOTAL: ${formatQ(total)}`,pageWidth-2,y,{align:'right'}); y+=8;
-    doc.setFontSize(8); doc.setFont(undefined,'normal'); doc.text("MARCK BUSINESS SOLUTIONS +502 4152 9411",pageWidth/2,y,{align:'center'});
-    doc.save(`ticket_${ticketNum}.pdf`);
-  }
+function generateTicketPDF(items,total,client){
+  try{
+    const doc = new jsPDF({unit:'mm', format:[80,300]});
+    let y = 8;
+    const img = new Image();
+    img.src = 'LOGO1.png';
+    img.onload = function(){
+      const imgW=40; const xCenter=80/2; const imgH = imgW*(img.height/img.width);
+      doc.addImage(img,'PNG',xCenter-imgW/2,y,imgW,imgH);
+      y+=imgH+4;
+      drawHeader();
+    }
+    img.onerror=function(){ drawHeader(); }
+
+    function drawHeader(){
+      doc.setFontSize(14); doc.setFont(undefined,'bold');
+      doc.text("MARCK BUSINESS",40,y,null,null,'center'); y+=6;
+      doc.setFontSize(9); doc.setFont(undefined,'normal');
+      doc.text(`Ticket #${ticketCounter}`,40,y,null,null,'center'); y+=5;
+      const fecha = new Date(); doc.text(`Fecha: ${fecha.toLocaleDateString()} ${fecha.toLocaleTimeString()}`,40,y,null,null,'center'); y+=5;
+      if(client){ doc.text(`Cliente: ${client}`,40,y,null,null,'center'); y+=5; }
+      doc.setLineWidth(0.3); doc.line(6,y,74,y); y+=3;
+      doc.setFontSize(9); doc.setFont(undefined,'normal');
+      const qtyX=8, nameX=20, totalX=72;
+      items.forEach(it=>{
+        const lineTotal = Number(it.qty)*Number(it.price);
+        const nameLines = doc.splitTextToSize(it.name, totalX-nameX-2);
+        doc.text(String(it.qty),qtyX,y);
+        doc.text(nameLines,nameX,y);
+        doc.text(formatQ(lineTotal),totalX,y,{align:'right'});
+        y+=nameLines.length*5+2;
+      });
+      y+=2; doc.line(6,y,74,y); y+=4;
+      doc.setFontSize(11); doc.setFont(undefined,'bold');
+      doc.text(`TOTAL: ${formatQ(total)}`,40,y,null,null,'center'); y+=8;
+      doc.setFontSize(9); doc.setFont(undefined,'normal');
+      doc.text("¡Gracias por su compra!",40,y,null,null,'center'); y+=5;
+      doc.setFontSize(8);
+      doc.text("Desarrollado por MARCK BUSINESS SOLUTIONS",40,y,null,null,'center'); y+=3;
+      doc.text("+502 4152 9411",40,y,null,null,'center');
+      const blobUrl = doc.output('bloburl'); window.open(blobUrl,'_blank');
+    }
+  }catch(e){ console.error('generateTicketPDF error',e);}
 }
 
-renderProducts(); renderCart(); renderSales();
+renderProducts(); renderSales(); renderCart();
 </script>
-
 </body>
 </html>
