@@ -6,6 +6,7 @@
 <title>Sistema de Cobro - MarckBusiness</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 <style>
 :root{
   --green:#25D366; --dark:#121212; --dark-card:#1E1E1E; --light:#f4f4f4; --accent:#03dac6;
@@ -17,7 +18,7 @@ body{
 h2,h3{margin:0 0 10px 0;color:var(--green);}
 .wrap{
   display:grid;
-  grid-template-columns:1fr 2fr;
+  grid-template-columns:1fr 1fr 1fr;
   gap:20px;
   max-width:1400px;
   margin:auto;
@@ -43,7 +44,7 @@ button:hover{background:var(--accent);}
 .danger:hover{background:#ff5252;}
 .ghost{background:#333;color:#fff;}
 .ghost:hover{background:#555;}
-ul.list{list-style:none;padding:0;margin:0;max-height:180px;overflow:auto;}
+ul.list{list-style:none;padding:0;margin:0;max-height:250px;overflow:auto;}
 ul.list li{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #333;border-radius:8px;margin-bottom:6px;}
 table{width:100%;border-collapse:collapse;margin-top:10px;}
 table th, table td{padding:10px;text-align:left;border-bottom:1px solid #333;}
@@ -59,9 +60,9 @@ table th, table td{padding:10px;text-align:left;border-bottom:1px solid #333;}
 <body>
 
 <div class="wrap">
-  <!-- Recuadro izquierda: agregar producto -->
+  <!-- Columna izquierda: agregar y listar productos -->
   <div class="card">
-    <h2>Agregar producto</h2>
+    <h2>Productos</h2>
     <label>Nombre</label><input id="p_name" type="text" placeholder="Ej: Polo blanco"/>
     <label>Precio (Q)</label><input id="p_price" type="number" min="0" step="0.01"/>
     <label>Stock</label><input id="p_stock" type="number" min="0" step="1"/>
@@ -75,16 +76,15 @@ table th, table td{padding:10px;text-align:left;border-bottom:1px solid #333;}
     <ul id="productsList" class="list"></ul>
   </div>
 
-  <!-- Recuadro central: búsqueda + ventas de hoy -->
+  <!-- Columna central: búsqueda + ventas de hoy -->
   <div class="card">
     <h2>Buscar producto</h2>
     <div class="flex-row">
       <input id="filterInput" type="text" placeholder="Buscar producto..." list="productsDatalist" class="big-input"/>
       <input id="filterQty" type="number" min="1" value="1" style="width:80px;" placeholder="Cant"/>
-      <button id="addFromSearchBtn" class="big-button">Agregar</button>
       <datalist id="productsDatalist"></datalist>
     </div>
-    <p class="small-note">Selecciona producto y cantidad para agregar al carrito.</p>
+    <p class="small-note">Selecciona producto y cantidad para agregar al carrito (Enter para agregar).</p>
 
     <h2>Ventas de hoy</h2>
     <ul id="salesList" class="list"></ul>
@@ -96,27 +96,27 @@ table th, table td{padding:10px;text-align:left;border-bottom:1px solid #333;}
       <button id="deleteSales" class="danger">Borrar ventas</button>
     </div>
   </div>
-</div>
 
-<!-- Panel venta debajo de todo -->
-<div class="card" style="max-width:1400px;margin:20px auto;">
-  <h2>Carrito / Venta</h2>
-  <table id="cartTable">
-    <thead><tr><th>Cant</th><th>Producto</th><th class="right">Precio</th><th class="right">Total</th><th></th></tr></thead>
-    <tbody></tbody>
-  </table>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-    <input id="clientName" placeholder="Cliente (opcional)" style="flex:1;margin-right:10px;"/>
-    <div class="right">
-      <div class="small-note">Total</div>
-      <div id="cartTotal" style="font-size:1.4rem;font-weight:700">Q0.00</div>
+  <!-- Columna derecha: carrito -->
+  <div class="card">
+    <h2>Carrito / Venta</h2>
+    <table id="cartTable">
+      <thead><tr><th>Cant</th><th>Producto</th><th class="right">Precio</th><th class="right">Total</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+      <input id="clientName" placeholder="Cliente (opcional)" style="flex:1;margin-right:10px;"/>
+      <div class="right">
+        <div class="small-note">Total</div>
+        <div id="cartTotal" style="font-size:1.4rem;font-weight:700">Q0.00</div>
+      </div>
     </div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button id="payBtn">Cobrar</button>
+      <button id="clearCartBtn" class="ghost">Limpiar</button>
+    </div>
+    <div class="small-note">Ticket 80mm imprimible.</div>
   </div>
-  <div style="display:flex;gap:8px;margin-top:12px;">
-    <button id="payBtn">Cobrar</button>
-    <button id="clearCartBtn" class="ghost">Limpiar</button>
-  </div>
-  <div class="small-note">Ticket 80mm imprimible.</div>
 </div>
 
 <div style="text-align:center;margin-top:20px;font-size:0.8rem;color:#888">
@@ -143,7 +143,6 @@ const p_stock = document.getElementById('p_stock');
 
 const filterInput = document.getElementById('filterInput');
 const filterQty = document.getElementById('filterQty');
-const addFromSearchBtn = document.getElementById('addFromSearchBtn');
 const productsDatalist = document.getElementById('productsDatalist');
 
 const cartTableBody = document.querySelector('#cartTable tbody');
@@ -242,27 +241,15 @@ function addToCart(idx,qty=1){
   if(exist){ 
     if(exist.qty+qty>prod.stock){alert('No hay suficiente stock');return;} 
     exist.qty+=qty; 
-  } else{ 
-    cart.push({idx,name:prod.name,price:prod.price,qty}); 
+  } else { 
+    cart.push({idx,name:prod.name,price:prod.price,qty:qty}); 
   }
   renderCart();
 }
 
 function removeFromCart(i){ cart.splice(i,1); renderCart(); }
-
 clearCartBtn.onclick = ()=>{ if(confirm('Limpiar carrito?')){cart=[];renderCart();} }
 
-// Agregar desde barra de búsqueda
-addFromSearchBtn.onclick = ()=>{
-  const name = filterInput.value.trim();
-  const qty = parseInt(filterQty.value)||1;
-  const idx = products.findIndex(p=>p.name.toLowerCase()===name.toLowerCase());
-  if(idx===-1){ alert('Producto no encontrado'); return;}
-  addToCart(idx,qty);
-  filterInput.value=''; filterQty.value='1';
-}
-
-// Cobrar
 payBtn.onclick = ()=>{
   if(cart.length===0){alert('Carrito vacío'); return;}
   const client = clientNameEl.value.trim();
@@ -281,18 +268,9 @@ payBtn.onclick = ()=>{
 // Render ventas
 function renderSales(){
   salesList.innerHTML=''; 
-  if(sales.length===0){
-    salesList.innerHTML='<li class="center small-note">No hay ventas hoy</li>'; 
-    salesCount.textContent='0'; salesTotal.textContent='Q0.00'; 
-    return;
-  }
+  if(sales.length===0){salesList.innerHTML='<li class="center small-note">No hay ventas hoy</li>'; salesCount.textContent='0'; salesTotal.textContent='Q0.00'; return;}
   let totalDia=0;
-  sales.forEach(s=>{
-    totalDia+=s.total; 
-    const li=document.createElement('li'); 
-    li.innerHTML=`Ticket ${s.ticket} ${s.client?'- '+s.client:''} <span class="right">${formatQ(s.total)}</span>`; 
-    salesList.appendChild(li);
-  });
+  sales.forEach(s=>{totalDia+=s.total; const li=document.createElement('li'); li.innerHTML=`Ticket ${s.ticket} ${s.client?'- '+s.client:''} <span class="right">${formatQ(s.total)}</span>`; salesList.appendChild(li);});
   salesCount.textContent=sales.length; salesTotal.textContent=formatQ(totalDia);
 }
 
@@ -303,23 +281,43 @@ deleteSalesBtn.onclick = ()=>{
   else{ alert("Código incorrecto"); }
 }
 
-// Exportar PDF inventario con tabla
+// Filtrar y agregar con Enter
+filterInput.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter'){
+    const prodName = filterInput.value.trim();
+    const qty = parseInt(filterQty.value)||1;
+    const idx = products.findIndex(p=>p.name===prodName);
+    if(idx>=0){ addToCart(idx,qty); filterInput.value=''; filterQty.value='1'; }
+    else{ alert('Producto no encontrado'); }
+  }
+});
+
+// Exportar PDF inventario con LOGO1.png
 exportProductsBtn.onclick = ()=>{
   if(products.length===0){alert('No hay productos'); return;}
   const doc = new jsPDF();
-  doc.setFontSize(18); doc.text("Inventario",14,20);
-  doc.setFontSize(12); doc.text(`Fecha: ${new Date().toLocaleDateString()}`,14,28);
-  
-  const headers = [["#", "Producto", "Precio", "Stock"]];
-  const data = products.map((p,i)=>[i+1, p.name, formatQ(p.price), p.stock]);
+  const logoImg = new Image();
+  logoImg.src = 'LOGO1.png';
+  logoImg.onload = function(){
+    doc.addImage(logoImg,'PNG',14,8,30,30);
+    drawTablePDF(doc);
+  };
+}
+
+function drawTablePDF(doc){
+  doc.setFontSize(18); doc.text('Inventario',14,50);
+  doc.setFontSize(12); doc.text(`Fecha: ${new Date().toLocaleDateString()}`,14,58);
+
+  const tableData = products.map((p,i)=>[i+1,p.name,formatQ(p.price),p.stock]);
   doc.autoTable({
-    startY:36,
-    head: headers,
-    body: data,
+    head:[['#','Producto','Precio','Stock']],
+    body:tableData,
+    startY:65,
     theme:'grid',
-    headStyles:{fillColor:[37,211,102],textColor:0},
-    styles:{textColor:255,fillColor:[30,30,30]},
+    headStyles:{fillColor:[37,211,102]},
+    styles:{fontSize:10}
   });
+
   doc.setFontSize(10); doc.text(`MarckBusiness © 2025 — Todos los derechos reservados`,14,280);
   doc.save('inventario.pdf');
 }
@@ -327,8 +325,5 @@ exportProductsBtn.onclick = ()=>{
 // Inicializar
 renderProducts(); renderCart(); renderSales();
 </script>
-
-<!-- jsPDF AutoTable plugin -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </body>
 </html>
