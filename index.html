@@ -17,7 +17,7 @@ body{
 h2,h3{margin:0 0 10px 0;color:var(--green);}
 .wrap{
   display:grid;
-  grid-template-columns:1fr 1fr 1fr;
+  grid-template-columns:1fr 2fr;
   gap:20px;
   max-width:1400px;
   margin:auto;
@@ -43,9 +43,9 @@ button:hover{background:var(--accent);}
 .danger:hover{background:#ff5252;}
 .ghost{background:#333;color:#fff;}
 .ghost:hover{background:#555;}
-ul.list{list-style:none;padding:0;margin:0;max-height:380px;overflow:auto;}
+ul.list{list-style:none;padding:0;margin:0;max-height:180px;overflow:auto;}
 ul.list li{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #333;border-radius:8px;margin-bottom:6px;}
-table{width:100%;border-collapse:collapse;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
 table th, table td{padding:10px;text-align:left;border-bottom:1px solid #333;}
 .right{text-align:right;}
 .center{text-align:center;}
@@ -57,20 +57,11 @@ table th, table td{padding:10px;text-align:left;border-bottom:1px solid #333;}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <!-- Recuadro búsqueda productos -->
-  <div class="card">
-    <h2>Buscar producto</h2>
-    <div class="flex-row">
-      <input id="filterInput" type="text" placeholder="Buscar producto..." list="productsDatalist" class="big-input"/>
-      <datalist id="productsDatalist"></datalist>
-    </div>
-    <p class="small-note">Selecciona un producto para agregar al carrito automáticamente.</p>
-  </div>
 
-  <!-- Recuadro agregar productos -->
+<div class="wrap">
+  <!-- Recuadro izquierda: agregar producto -->
   <div class="card">
-    <h2>Agregar nuevo producto</h2>
+    <h2>Agregar producto</h2>
     <label>Nombre</label><input id="p_name" type="text" placeholder="Ej: Polo blanco"/>
     <label>Precio (Q)</label><input id="p_price" type="number" min="0" step="0.01"/>
     <label>Stock</label><input id="p_stock" type="number" min="0" step="1"/>
@@ -84,30 +75,18 @@ table th, table td{padding:10px;text-align:left;border-bottom:1px solid #333;}
     <ul id="productsList" class="list"></ul>
   </div>
 
-  <!-- Panel venta -->
+  <!-- Recuadro central: búsqueda + ventas de hoy -->
   <div class="card">
-    <h2>Venta</h2>
-    <table id="cartTable">
-      <thead><tr><th>Cant</th><th>Producto</th><th class="right">Precio</th><th class="right">Total</th><th></th></tr></thead>
-      <tbody></tbody>
-    </table>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-      <input id="clientName" placeholder="Cliente (opcional)" style="flex:1;margin-right:10px;"/>
-      <div class="right">
-        <div class="small-note">Total</div>
-        <div id="cartTotal" style="font-size:1.4rem;font-weight:700">Q0.00</div>
-      </div>
+    <h2>Buscar producto</h2>
+    <div class="flex-row">
+      <input id="filterInput" type="text" placeholder="Buscar producto..." list="productsDatalist" class="big-input"/>
+      <input id="filterQty" type="number" min="1" value="1" style="width:80px;" placeholder="Cant"/>
+      <button id="addFromSearchBtn" class="big-button">Agregar</button>
+      <datalist id="productsDatalist"></datalist>
     </div>
-    <div style="display:flex;gap:8px;margin-top:12px;">
-      <button id="payBtn">Cobrar</button>
-      <button id="clearCartBtn" class="ghost">Limpiar</button>
-    </div>
-    <div class="small-note">Ticket 80mm imprimible.</div>
-  </div>
+    <p class="small-note">Selecciona producto y cantidad para agregar al carrito.</p>
 
-  <!-- Registro ventas -->
-  <div class="card">
-    <h2>Ventas hoy</h2>
+    <h2>Ventas de hoy</h2>
     <ul id="salesList" class="list"></ul>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
       <div><div class="small-note">Ventas</div><div id="salesCount">0</div></div>
@@ -117,6 +96,27 @@ table th, table td{padding:10px;text-align:left;border-bottom:1px solid #333;}
       <button id="deleteSales" class="danger">Borrar ventas</button>
     </div>
   </div>
+</div>
+
+<!-- Panel venta debajo de todo -->
+<div class="card" style="max-width:1400px;margin:20px auto;">
+  <h2>Carrito / Venta</h2>
+  <table id="cartTable">
+    <thead><tr><th>Cant</th><th>Producto</th><th class="right">Precio</th><th class="right">Total</th><th></th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+    <input id="clientName" placeholder="Cliente (opcional)" style="flex:1;margin-right:10px;"/>
+    <div class="right">
+      <div class="small-note">Total</div>
+      <div id="cartTotal" style="font-size:1.4rem;font-weight:700">Q0.00</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:12px;">
+    <button id="payBtn">Cobrar</button>
+    <button id="clearCartBtn" class="ghost">Limpiar</button>
+  </div>
+  <div class="small-note">Ticket 80mm imprimible.</div>
 </div>
 
 <div style="text-align:center;margin-top:20px;font-size:0.8rem;color:#888">
@@ -140,7 +140,10 @@ const exportProductsBtn = document.getElementById('exportProductsBtn');
 const p_name = document.getElementById('p_name');
 const p_price = document.getElementById('p_price');
 const p_stock = document.getElementById('p_stock');
+
 const filterInput = document.getElementById('filterInput');
+const filterQty = document.getElementById('filterQty');
+const addFromSearchBtn = document.getElementById('addFromSearchBtn');
 const productsDatalist = document.getElementById('productsDatalist');
 
 const cartTableBody = document.querySelector('#cartTable tbody');
@@ -176,7 +179,6 @@ function renderProducts(){
   updateDatalist();
 }
 
-// Actualizar datalist
 function updateDatalist(){
   productsDatalist.innerHTML='';
   products.forEach(p=>{
@@ -210,10 +212,8 @@ function deleteProduct(idx){
 // Limpiar todos los productos
 clearProductsBtn.onclick = ()=>{
   const code = prompt("Ingrese código para borrar productos:");
-  if(code==='3336'){
-    if(confirm('Borrar todos los productos?')){
-      products=[]; saveProducts(); renderProducts();
-    }
+  if(code==='3336'){ 
+    if(confirm('Borrar todos los productos?')){ products=[]; saveProducts(); renderProducts(); } 
   } else { alert("Código incorrecto"); }
 }
 
@@ -227,8 +227,7 @@ function renderCart(){
   }
   let total=0; 
   cart.forEach((item,i)=>{
-    const line=item.price*item.qty; 
-    total+=line;
+    const line=item.price*item.qty; total+=line;
     const tr=document.createElement('tr');
     tr.innerHTML=`<td>${item.qty}</td><td>${item.name}</td><td class="right">${formatQ(item.price)}</td><td class="right">${formatQ(line)}</td><td><button onclick="removeFromCart(${i})" class="danger">X</button></td>`;
     cartTableBody.appendChild(tr);
@@ -236,32 +235,32 @@ function renderCart(){
   cartTotalEl.textContent=formatQ(total);
 }
 
-function addToCart(idx){
+function addToCart(idx,qty=1){
   const prod = products[idx]; 
   if(prod.stock===0){alert('Sin stock');return;}
   const exist = cart.find(c=>c.idx===idx);
   if(exist){ 
-    if(exist.qty+1>prod.stock){alert('No hay suficiente stock');return;} 
-    exist.qty++; 
-  } else { 
-    cart.push({idx,name:prod.name,price:prod.price,qty:1}); 
+    if(exist.qty+qty>prod.stock){alert('No hay suficiente stock');return;} 
+    exist.qty+=qty; 
+  } else{ 
+    cart.push({idx,name:prod.name,price:prod.price,qty}); 
   }
   renderCart();
 }
 
 function removeFromCart(i){ cart.splice(i,1); renderCart(); }
+
 clearCartBtn.onclick = ()=>{ if(confirm('Limpiar carrito?')){cart=[];renderCart();} }
 
-// Agregar producto desde la barra de búsqueda
-filterInput.addEventListener('change', ()=>{
-  const val = filterInput.value.trim();
-  if(!val) return;
-  const idx = products.findIndex(p=>p.name===val);
-  if(idx>=0){
-    addToCart(idx);
-    filterInput.value='';
-  }
-});
+// Agregar desde barra de búsqueda
+addFromSearchBtn.onclick = ()=>{
+  const name = filterInput.value.trim();
+  const qty = parseInt(filterQty.value)||1;
+  const idx = products.findIndex(p=>p.name.toLowerCase()===name.toLowerCase());
+  if(idx===-1){ alert('Producto no encontrado'); return;}
+  addToCart(idx,qty);
+  filterInput.value=''; filterQty.value='1';
+}
 
 // Cobrar
 payBtn.onclick = ()=>{
@@ -288,7 +287,12 @@ function renderSales(){
     return;
   }
   let totalDia=0;
-  sales.forEach(s=>{totalDia+=s.total; const li=document.createElement('li'); li.innerHTML=`Ticket ${s.ticket} ${s.client?'- '+s.client:''} <span class="right">${formatQ(s.total)}</span>`; salesList.appendChild(li);});
+  sales.forEach(s=>{
+    totalDia+=s.total; 
+    const li=document.createElement('li'); 
+    li.innerHTML=`Ticket ${s.ticket} ${s.client?'- '+s.client:''} <span class="right">${formatQ(s.total)}</span>`; 
+    salesList.appendChild(li);
+  });
   salesCount.textContent=sales.length; salesTotal.textContent=formatQ(totalDia);
 }
 
@@ -299,17 +303,22 @@ deleteSalesBtn.onclick = ()=>{
   else{ alert("Código incorrecto"); }
 }
 
-// Exportar PDF inventario
+// Exportar PDF inventario con tabla
 exportProductsBtn.onclick = ()=>{
   if(products.length===0){alert('No hay productos'); return;}
   const doc = new jsPDF();
   doc.setFontSize(18); doc.text("Inventario",14,20);
   doc.setFontSize(12); doc.text(`Fecha: ${new Date().toLocaleDateString()}`,14,28);
-  let y=36; doc.setFontSize(11);
-  products.forEach((p,i)=>{
-    doc.text(`${i+1}. ${p.name}`,14,y);
-    doc.text(`Precio: ${formatQ(p.price)}`,100,y);
-    doc.text(`Stock: ${p.stock}`,150,y); y+=8;
+  
+  const headers = [["#", "Producto", "Precio", "Stock"]];
+  const data = products.map((p,i)=>[i+1, p.name, formatQ(p.price), p.stock]);
+  doc.autoTable({
+    startY:36,
+    head: headers,
+    body: data,
+    theme:'grid',
+    headStyles:{fillColor:[37,211,102],textColor:0},
+    styles:{textColor:255,fillColor:[30,30,30]},
   });
   doc.setFontSize(10); doc.text(`MarckBusiness © 2025 — Todos los derechos reservados`,14,280);
   doc.save('inventario.pdf');
@@ -318,5 +327,8 @@ exportProductsBtn.onclick = ()=>{
 // Inicializar
 renderProducts(); renderCart(); renderSales();
 </script>
+
+<!-- jsPDF AutoTable plugin -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </body>
 </html>
