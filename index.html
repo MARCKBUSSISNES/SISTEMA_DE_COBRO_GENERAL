@@ -7,60 +7,49 @@
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-  :root{
-    --green:#25D366;
-    --dark:#121212;
-    --dark-card:#1E1E1E;
-    --light:#f4f4f4;
-    --accent:#03dac6;
-  }
-  body{
-    font-family:'Roboto Mono', monospace;
-    background:var(--dark);
-    color:var(--light);
-    margin:0;padding:20px;
-  }
-  h2,h3{margin:0 0 10px 0;color:var(--green);}
-  .wrap{
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    gap:20px;
-    max-width:1400px;
-    margin:auto;
-    align-items:start;
-  }
-  .card{
-    background:var(--dark-card);
-    border-radius:16px;
-    padding:20px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.5);
-  }
-  label{font-size:0.85rem;color:#aaa;}
-  input[type=text], input[type=number]{
-    width:100%;padding:10px;margin:6px 0 12px 0;border-radius:10px;
-    border:1px solid #333;background:var(--dark);color:var(--light);box-sizing:border-box;
-  }
-  button{
-    background:var(--green);
-    color:#fff;
-    border:none;padding:10px 16px;
-    border-radius:12px;
-    cursor:pointer;
-    font-weight:700;
-    transition:0.3s;
-  }
-  button:hover{background:var(--accent);}
-  .danger{background:#e74c3c;}
-  .danger:hover{background:#ff5252;}
-  .ghost{background:#333;color:#fff;}
-  .ghost:hover{background:#555;}
-  ul.list{list-style:none;padding:0;margin:0;max-height:380px;overflow:auto;}
-  ul.list li{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #333;border-radius:8px;margin-bottom:6px;}
-  table{width:100%;border-collapse:collapse;}
-  table th, table td{padding:10px;text-align:left;border-bottom:1px solid #333;}
-  .right{text-align:right;}
-  .center{text-align:center;}
-  .small-note{font-size:0.8rem;color:#888;}
+:root{
+  --green:#25D366; --dark:#121212; --dark-card:#1E1E1E; --light:#f4f4f4; --accent:#03dac6;
+}
+body{
+  font-family:'Roboto Mono', monospace;
+  background:var(--dark); color:var(--light); margin:0;padding:20px;
+}
+h2,h3{margin:0 0 10px 0;color:var(--green);}
+.wrap{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:20px;
+  max-width:1400px;
+  margin:auto;
+  align-items:start;
+}
+.card{
+  background:var(--dark-card);
+  border-radius:16px;
+  padding:20px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.5);
+}
+label{font-size:0.85rem;color:#aaa;}
+input[type=text], input[type=number]{
+  width:100%;padding:10px;margin:6px 0 12px 0;border-radius:10px;
+  border:1px solid #333;background:var(--dark);color:var(--light);box-sizing:border-box;
+}
+button{
+  background:var(--green); color:#fff; border:none;padding:10px 16px;
+  border-radius:12px; cursor:pointer; font-weight:700; transition:0.3s;
+}
+button:hover{background:var(--accent);}
+.danger{background:#e74c3c;}
+.danger:hover{background:#ff5252;}
+.ghost{background:#333;color:#fff;}
+.ghost:hover{background:#555;}
+ul.list{list-style:none;padding:0;margin:0;max-height:380px;overflow:auto;}
+ul.list li{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #333;border-radius:8px;margin-bottom:6px;}
+table{width:100%;border-collapse:collapse;}
+table th, table td{padding:10px;text-align:left;border-bottom:1px solid #333;}
+.right{text-align:right;}
+.center{text-align:center;}
+.small-note{font-size:0.8rem;color:#888;}
 </style>
 </head>
 <body>
@@ -68,6 +57,12 @@
   <!-- Panel productos -->
   <div class="card">
     <h2>Productos</h2>
+    <label>Filtrar productos</label>
+    <input id="filterInput" type="text" placeholder="Buscar producto..."/>
+    <label>Logo (opcional)</label>
+    <input type="file" id="logoInput" accept="image/*"/>
+    <label>Nombre del negocio</label>
+    <input id="businessName" type="text" placeholder="Nombre del negocio"/>
     <label>Nombre</label><input id="p_name" type="text" placeholder="Ej: Polo blanco"/>
     <label>Precio (Q)</label><input id="p_price" type="number" min="0" step="0.01"/>
     <label>Stock</label><input id="p_stock" type="number" min="0" step="1"/>
@@ -122,7 +117,6 @@
 
 <script>
 const { jsPDF } = window.jspdf;
-
 const KEY_PRODUCTS = 'mb_products_pdf';
 const KEY_SALES = 'mb_sales_pdf';
 const KEY_TICKET = 'mb_ticket_counter_pdf';
@@ -170,6 +164,7 @@ function renderProducts(){
   });
 }
 
+// Agregar producto
 addProductBtn.onclick = ()=>{
   const name = p_name.value.trim(); const price = parseFloat(p_price.value)||0; const stock = parseInt(p_stock.value)||0;
   if(!name){alert('Nombre requerido');return;}
@@ -177,9 +172,35 @@ addProductBtn.onclick = ()=>{
   saveProducts(); renderProducts();
   p_name.value=''; p_price.value=''; p_stock.value='';
 };
-clearProductsBtn.onclick = ()=>{ if(confirm('Borrar todos los productos?')){products=[];saveProducts();renderProducts();} };
-function deleteProduct(idx){ products.splice(idx,1); saveProducts(); renderProducts(); }
 
+// Borrar productos con código
+clearProductsBtn.onclick = ()=>{
+  const code = prompt("Ingrese código para borrar productos:");
+  if(code==='3336'){
+    if(confirm('Borrar todos los productos?')){
+      products=[]; saveProducts(); renderProducts();
+    }
+  } else { alert("Código incorrecto"); }
+}
+
+function deleteProduct(idx){
+  const code = prompt("Ingrese código para borrar producto:");
+  if(code==='3336'){ products.splice(idx,1); saveProducts(); renderProducts(); }
+  else { alert("Código incorrecto"); }
+}
+
+// Filtrar productos
+const filterInput = document.getElementById('filterInput');
+filterInput.addEventListener('input', ()=>{
+  const val = filterInput.value.toLowerCase();
+  const items = productsList.querySelectorAll('li');
+  items.forEach((li,idx)=>{
+    const name = products[idx]?.name.toLowerCase()||'';
+    li.style.display = name.includes(val)?'flex':'none';
+  });
+});
+
+// Carrito y venta
 function renderCart(){
   cartTableBody.innerHTML=''; if(cart.length===0){cartTableBody.innerHTML='<tr><td colspan="5" class="center small-note">Carrito vacío</td></tr>';cartTotalEl.textContent='Q0.00'; return;}
   let total=0; cart.forEach((item,i)=>{const line=item.price*item.qty; total+=line;
@@ -198,9 +219,7 @@ function addToCart(idx){
   renderCart();
 }
 function removeFromCart(i){ cart.splice(i,1); renderCart(); }
-
 clearCartBtn.onclick = ()=>{ if(confirm('Limpiar carrito?')){cart=[];renderCart();} }
-
 payBtn.onclick = ()=>{
   if(cart.length===0){alert('Carrito vacío'); return;}
   const client = clientNameEl.value.trim();
@@ -222,18 +241,43 @@ function renderSales(){
   sales.forEach(s=>{totalDia+=s.total; const li=document.createElement('li'); li.innerHTML=`Ticket ${s.ticket} ${s.client?'- '+s.client:''} <span class="right">${formatQ(s.total)}</span>`; salesList.appendChild(li);});
   salesCount.textContent=sales.length; salesTotal.textContent=formatQ(totalDia);
 }
-deleteSalesBtn.onclick = ()=>{ if(confirm('Borrar ventas del día?')){sales=[];saveSales();renderSales();} }
 
+// Borrar ventas con código
+deleteSalesBtn.onclick = ()=>{
+  const code = prompt("Ingrese código para borrar ventas:");
+  if(code==='3336'){ if(confirm('Borrar ventas del día?')){ sales=[]; saveSales(); renderSales(); } }
+  else{ alert("Código incorrecto"); }
+}
+
+// Exportar PDF inventario con nombre y logo
 exportProductsBtn.onclick = ()=>{
   if(products.length===0){alert('No hay productos'); return;}
-  const doc = new jsPDF(); doc.setFontSize(18); doc.text("Inventario MarckBusiness",14,20);
-  doc.setFontSize(12); doc.text(`Fecha: ${new Date().toLocaleDateString()}`,14,28);
-  let y=36; doc.setFontSize(11);
-  products.forEach((p,i)=>{
-    doc.text(`${i+1}. ${p.name}`,14,y); doc.text(`Precio: ${formatQ(p.price)}`,120,y); doc.text(`Stock: ${p.stock}`,160,y); y+=8;
-  });
-  doc.setFontSize(10); doc.text("MarckBusiness © 2025 — Todos los derechos reservados",14,280);
-  doc.save('inventario_marckbusiness.pdf');
+  const doc = new jsPDF();
+  const business = document.getElementById('businessName').value.trim() || "Inventario";
+  const logoFile = document.getElementById('logoInput').files[0];
+
+  if(logoFile){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      doc.addImage(e.target.result,'PNG',14,8,30,30);
+      drawPDF();
+    }
+    reader.readAsDataURL(logoFile);
+  } else { drawPDF(); }
+
+  function drawPDF(){
+    const yStart = logoFile?42:20;
+    doc.setFontSize(18); doc.text(business,14,yStart);
+    doc.setFontSize(12); doc.text(`Fecha: ${new Date().toLocaleDateString()}`,14,yStart+8);
+    let y=yStart+16; doc.setFontSize(11);
+    products.forEach((p,i)=>{
+      doc.text(`${i+1}. ${p.name}`,14,y);
+      doc.text(`Precio: ${formatQ(p.price)}`,120,y);
+      doc.text(`Stock: ${p.stock}`,160,y); y+=8;
+    });
+    doc.setFontSize(10); doc.text(`MarckBusiness © 2025 — Todos los derechos reservados`,14,280);
+    doc.save('inventario.pdf');
+  }
 }
 
 // Inicializar
