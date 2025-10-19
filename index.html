@@ -52,22 +52,30 @@ table th, table td{padding:10px;text-align:left;border-bottom:1px solid #333;}
 .small-note{font-size:0.8rem;color:#888;}
 .flex-row{display:flex;gap:10px;align-items:center;}
 .flex-row input[type=text]{flex:1;}
+.big-input{font-size:1.2rem;padding:12px;}
+.big-button{font-size:1.2rem;padding:12px;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <!-- Panel productos -->
+  <!-- Recuadro búsqueda productos -->
   <div class="card">
-    <h2>Productos</h2>
+    <h2>Buscar producto</h2>
     <div class="flex-row">
-      <input id="filterInput" type="text" placeholder="Buscar producto..." list="productsDatalist"/>
+      <input id="filterInput" type="text" placeholder="Buscar producto..." list="productsDatalist" class="big-input"/>
       <datalist id="productsDatalist"></datalist>
-      <button id="addProductBtn">Agregar</button>
     </div>
+    <p class="small-note">Selecciona un producto para agregar al carrito automáticamente.</p>
+  </div>
+
+  <!-- Recuadro agregar productos -->
+  <div class="card">
+    <h2>Agregar nuevo producto</h2>
     <label>Nombre</label><input id="p_name" type="text" placeholder="Ej: Polo blanco"/>
     <label>Precio (Q)</label><input id="p_price" type="number" min="0" step="0.01"/>
     <label>Stock</label><input id="p_stock" type="number" min="0" step="1"/>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+      <button id="addProductBtn" class="big-button">Agregar producto</button>
       <button id="clearProductsBtn" class="danger">Borrar todo</button>
       <button id="exportProductsBtn" class="ghost">Descargar inventario PDF</button>
     </div>
@@ -312,4 +320,3 @@ renderProducts(); renderCart(); renderSales();
 </script>
 </body>
 </html>
-
