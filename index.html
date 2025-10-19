@@ -60,7 +60,8 @@ table th, table td{padding:10px;text-align:left;border-bottom:1px solid #333;}
   <div class="card">
     <h2>Productos</h2>
     <div class="flex-row">
-      <input id="filterInput" type="text" placeholder="Buscar producto..."/>
+      <input id="filterInput" type="text" placeholder="Buscar producto..." list="productsDatalist"/>
+      <datalist id="productsDatalist"></datalist>
       <button id="addProductBtn">Agregar</button>
     </div>
     <label>Nombre</label><input id="p_name" type="text" placeholder="Ej: Polo blanco"/>
@@ -132,6 +133,7 @@ const p_name = document.getElementById('p_name');
 const p_price = document.getElementById('p_price');
 const p_stock = document.getElementById('p_stock');
 const filterInput = document.getElementById('filterInput');
+const productsDatalist = document.getElementById('productsDatalist');
 
 const cartTableBody = document.querySelector('#cartTable tbody');
 const cartTotalEl = document.getElementById('cartTotal');
@@ -149,6 +151,7 @@ function saveSales(){ localStorage.setItem(KEY_SALES, JSON.stringify(sales)); }
 function saveTicketCounter(){ localStorage.setItem(KEY_TICKET, ticketCounter.toString()); }
 function formatQ(v){ return 'Q'+Number(v).toFixed(2); }
 
+// Render productos
 function renderProducts(){
   productsList.innerHTML='';
   if(products.length===0){ productsList.innerHTML='<li class="center small-note">No hay productos</li>'; return;}
@@ -162,18 +165,41 @@ function renderProducts(){
     </div>`;
     productsList.appendChild(li);
   });
+  updateDatalist();
+}
+
+// Actualizar datalist
+function updateDatalist(){
+  productsDatalist.innerHTML='';
+  products.forEach(p=>{
+    const option = document.createElement('option');
+    option.value = p.name;
+    productsDatalist.appendChild(option);
+  });
 }
 
 // Agregar producto
 addProductBtn.onclick = ()=>{
-  const name = p_name.value.trim(); const price = parseFloat(p_price.value)||0; const stock = parseInt(p_stock.value)||0;
+  const name = p_name.value.trim(); 
+  const price = parseFloat(p_price.value)||0; 
+  const stock = parseInt(p_stock.value)||0;
   if(!name){alert('Nombre requerido');return;}
   products.push({name,price,stock});
   saveProducts(); renderProducts();
   p_name.value=''; p_price.value=''; p_stock.value='';
 };
 
-// Borrar productos
+// Borrar producto individual
+function deleteProduct(idx){
+  const code = prompt("Ingrese código para borrar producto:");
+  if(code==='3336'){ 
+    products.splice(idx,1); 
+    saveProducts(); renderProducts(); 
+  }
+  else { alert("Código incorrecto"); }
+}
+
+// Limpiar todos los productos
 clearProductsBtn.onclick = ()=>{
   const code = prompt("Ingrese código para borrar productos:");
   if(code==='3336'){
@@ -183,26 +209,18 @@ clearProductsBtn.onclick = ()=>{
   } else { alert("Código incorrecto"); }
 }
 
-function deleteProduct(idx){
-  const code = prompt("Ingrese código para borrar producto:");
-  if(code==='3336'){ products.splice(idx,1); saveProducts(); renderProducts(); }
-  else { alert("Código incorrecto"); }
-}
-
-// Filtrar productos
-filterInput.addEventListener('input', ()=>{
-  const val = filterInput.value.toLowerCase();
-  const items = productsList.querySelectorAll('li');
-  items.forEach((li,idx)=>{
-    const name = products[idx]?.name.toLowerCase()||'';
-    li.style.display = name.includes(val)?'flex':'none';
-  });
-});
-
 // Carrito y venta
 function renderCart(){
-  cartTableBody.innerHTML=''; if(cart.length===0){cartTableBody.innerHTML='<tr><td colspan="5" class="center small-note">Carrito vacío</td></tr>';cartTotalEl.textContent='Q0.00'; return;}
-  let total=0; cart.forEach((item,i)=>{const line=item.price*item.qty; total+=line;
+  cartTableBody.innerHTML=''; 
+  if(cart.length===0){
+    cartTableBody.innerHTML='<tr><td colspan="5" class="center small-note">Carrito vacío</td></tr>';
+    cartTotalEl.textContent='Q0.00'; 
+    return;
+  }
+  let total=0; 
+  cart.forEach((item,i)=>{
+    const line=item.price*item.qty; 
+    total+=line;
     const tr=document.createElement('tr');
     tr.innerHTML=`<td>${item.qty}</td><td>${item.name}</td><td class="right">${formatQ(item.price)}</td><td class="right">${formatQ(line)}</td><td><button onclick="removeFromCart(${i})" class="danger">X</button></td>`;
     cartTableBody.appendChild(tr);
@@ -211,14 +229,33 @@ function renderCart(){
 }
 
 function addToCart(idx){
-  const prod = products[idx]; if(prod.stock===0){alert('Sin stock');return;}
+  const prod = products[idx]; 
+  if(prod.stock===0){alert('Sin stock');return;}
   const exist = cart.find(c=>c.idx===idx);
-  if(exist){ if(exist.qty+1>prod.stock){alert('No hay suficiente stock');return;} exist.qty++; } 
-  else{ cart.push({idx,name:prod.name,price:prod.price,qty:1}); }
+  if(exist){ 
+    if(exist.qty+1>prod.stock){alert('No hay suficiente stock');return;} 
+    exist.qty++; 
+  } else { 
+    cart.push({idx,name:prod.name,price:prod.price,qty:1}); 
+  }
   renderCart();
 }
+
 function removeFromCart(i){ cart.splice(i,1); renderCart(); }
 clearCartBtn.onclick = ()=>{ if(confirm('Limpiar carrito?')){cart=[];renderCart();} }
+
+// Agregar producto desde la barra de búsqueda
+filterInput.addEventListener('change', ()=>{
+  const val = filterInput.value.trim();
+  if(!val) return;
+  const idx = products.findIndex(p=>p.name===val);
+  if(idx>=0){
+    addToCart(idx);
+    filterInput.value='';
+  }
+});
+
+// Cobrar
 payBtn.onclick = ()=>{
   if(cart.length===0){alert('Carrito vacío'); return;}
   const client = clientNameEl.value.trim();
@@ -232,11 +269,16 @@ payBtn.onclick = ()=>{
   sales.push({ticket:ticketCounter,client,items:ventaItems,total:totalVenta,date:new Date().toISOString()});
   saveSales(); ticketCounter++; saveTicketCounter(); cart=[]; renderCart(); renderSales();
   alert('Venta registrada');
-  printTicket(ticketCounter-1, ventaItems, totalVenta, client); // imprimir ticket
 }
 
+// Render ventas
 function renderSales(){
-  salesList.innerHTML=''; if(sales.length===0){salesList.innerHTML='<li class="center small-note">No hay ventas hoy</li>'; salesCount.textContent='0'; salesTotal.textContent='Q0.00'; return;}
+  salesList.innerHTML=''; 
+  if(sales.length===0){
+    salesList.innerHTML='<li class="center small-note">No hay ventas hoy</li>'; 
+    salesCount.textContent='0'; salesTotal.textContent='Q0.00'; 
+    return;
+  }
   let totalDia=0;
   sales.forEach(s=>{totalDia+=s.total; const li=document.createElement('li'); li.innerHTML=`Ticket ${s.ticket} ${s.client?'- '+s.client:''} <span class="right">${formatQ(s.total)}</span>`; salesList.appendChild(li);});
   salesCount.textContent=sales.length; salesTotal.textContent=formatQ(totalDia);
@@ -249,38 +291,20 @@ deleteSalesBtn.onclick = ()=>{
   else{ alert("Código incorrecto"); }
 }
 
-// Exportar PDF inventario sin logo ni nombre
+// Exportar PDF inventario
 exportProductsBtn.onclick = ()=>{
   if(products.length===0){alert('No hay productos'); return;}
   const doc = new jsPDF();
-  doc.setFontSize(14);
-  doc.text(`Inventario - ${new Date().toLocaleDateString()}`,14,20);
-  let y=28;
+  doc.setFontSize(18); doc.text("Inventario",14,20);
+  doc.setFontSize(12); doc.text(`Fecha: ${new Date().toLocaleDateString()}`,14,28);
+  let y=36; doc.setFontSize(11);
   products.forEach((p,i)=>{
-    doc.text(`${i+1}. ${p.name} - Precio: ${formatQ(p.price)} - Stock: ${p.stock}`,14,y);
-    y+=8;
+    doc.text(`${i+1}. ${p.name}`,14,y);
+    doc.text(`Precio: ${formatQ(p.price)}`,100,y);
+    doc.text(`Stock: ${p.stock}`,150,y); y+=8;
   });
+  doc.setFontSize(10); doc.text(`MarckBusiness © 2025 — Todos los derechos reservados`,14,280);
   doc.save('inventario.pdf');
-}
-
-// Función de ticket 80mm simple
-function printTicket(ticketNumber, items, total, client){
-  const doc = new jsPDF({unit:'mm', format:[80,200]});
-  doc.setFontSize(12);
-  doc.text(`Ticket #${ticketNumber}`,10,10);
-  doc.setFontSize(10);
-  doc.text(`Fecha: ${new Date().toLocaleString()}`,10,18);
-  if(client) doc.text(`Cliente: ${client}`,10,26);
-  let y=34;
-  items.forEach(it=>{
-    doc.text(`${it.qty} x ${it.name}`,10,y);
-    doc.text(`${formatQ(it.price)}  ${formatQ(it.qty*it.price)}`,50,y);
-    y+=6;
-  });
-  y+=4;
-  doc.setFontSize(12);
-  doc.text(`TOTAL: ${formatQ(total)}`,10,y);
-  doc.save(`ticket_${ticketNumber}.pdf`);
 }
 
 // Inicializar
@@ -288,3 +312,4 @@ renderProducts(); renderCart(); renderSales();
 </script>
 </body>
 </html>
+
