@@ -118,21 +118,19 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
     <div class="sub-card">
       <h2>Buscar producto</h2>
       <div class="flex-row">
-        <!-- INPUT ORIGINAL: lo mantengo tal cual -->
         <input id="filterInput" type="text" placeholder="Buscar producto..." list="productsDatalist" class="big-input"/>
         <input id="filterQty" type="number" min="1" value="1" style="width:100px;" placeholder="Cant"/>
         <button id="addFilterBtn" class="add-cart-btn">+</button>
         <datalist id="productsDatalist"></datalist>
       </div>
 
-      <!-- AÑADIDO: select desplegable (no elimina ni toca el input original) -->
+      <!-- AÑADIDO: select desplegable -->
       <div style="margin-top:8px;">
         <label class="small-note">O seleccionar desde la lista:</label>
         <select id="productSelect" style="width:100%;padding:10px;border-radius:10px;background:var(--dark);color:var(--light);border:1px solid #333;">
           <option value="">-- Seleccionar producto --</option>
         </select>
       </div>
-      <!-- FIN AÑADIDO -->
 
       <p class="small-note">Selecciona producto y cantidad para agregar al carrito.</p>
     </div>
@@ -177,12 +175,6 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
 </div>
 
 <script>
-/* -------------------------------
-   Código original intacto (copiado tal como lo entregaste)
-   He añadido funciones y elementos sin borrar ni reemplazar nada.
-   Las líneas nuevas están claramente marcadas con "AÑADIDO" en comentarios.
-   ------------------------------- */
-
 const { jsPDF } = window.jspdf;
 const KEY_PRODUCTS = 'mb_products_pdf';
 const KEY_SALES = 'mb_sales_pdf';
@@ -216,16 +208,13 @@ const salesCount = document.getElementById('salesCount');
 const salesTotal = document.getElementById('salesTotal');
 const deleteSalesBtn = document.getElementById('deleteSales');
 
-/* --- AÑADIDO: referencia al select desplegable NUEVO --- */
 const productSelect = document.getElementById('productSelect');
-/* --- FIN AÑADIDO --- */
 
 function saveProducts(){ localStorage.setItem(KEY_PRODUCTS, JSON.stringify(products)); }
 function saveSales(){ localStorage.setItem(KEY_SALES, JSON.stringify(sales)); }
 function saveTicketCounter(){ localStorage.setItem(KEY_TICKET, ticketCounter.toString()); }
 function formatQ(v){ return 'Q'+Number(v).toFixed(2); }
 
-// Render productos
 function renderProducts(){
   productsList.innerHTML='';
   if(products.length===0){ productsList.innerHTML='<li class="center small-note">No hay productos</li>'; return;}
@@ -239,24 +228,20 @@ function renderProducts(){
     </div>`;
     productsList.appendChild(li);
   });
-  // datalist
   productsDatalist.innerHTML = '';
   products.forEach(p=>{ const op=document.createElement('option'); op.value=p.name; productsDatalist.appendChild(op); });
 
-  /* --- AÑADIDO: llenar también el select desplegable SIN BORRAR el datalist/input original --- */
   if(productSelect){
     productSelect.innerHTML = '<option value="">-- Seleccionar producto --</option>';
     products.forEach((p, idx) => {
       const o = document.createElement('option');
-      o.value = idx; // guardo el índice para poder referenciar al producto
+      o.value = idx;
       o.textContent = p.name + (p.stock !== undefined ? ` (${p.stock})` : '');
       productSelect.appendChild(o);
     });
   }
-  /* --- FIN AÑADIDO --- */
 }
 
-// Agregar producto
 addProductBtn.onclick = ()=>{
   const name = p_name.value.trim(); const price = parseFloat(p_price.value)||0; const stock = parseInt(p_stock.value)||0;
   if(!name){alert('Nombre requerido'); return;}
@@ -265,7 +250,6 @@ addProductBtn.onclick = ()=>{
   p_name.value=''; p_price.value=''; p_stock.value='';
 };
 
-// Borrar productos
 clearProductsBtn.onclick = ()=>{
   const code = prompt("Ingrese código para borrar productos:");
   if(code==='3336'){
@@ -280,7 +264,6 @@ function deleteProduct(idx){
   else { alert("Código incorrecto"); }
 }
 
-// Render carrito
 function renderCart(){
   cartTableBody.innerHTML='';
   if(cart.length===0){cartTableBody.innerHTML='<tr><td colspan="5" class="center small-note">Carrito vacío</td></tr>'; cartTotalEl.textContent='Q0.00'; return;}
@@ -294,7 +277,6 @@ function renderCart(){
   cartTotalEl.textContent = formatQ(total);
 }
 
-// Agregar al carrito
 function addToCart(idx, qty){
   const prod = products[idx]; if(prod.stock===0){alert('Sin stock'); return;}
   const exist = cart.find(c=>c.idx===idx);
@@ -303,7 +285,6 @@ function addToCart(idx, qty){
   renderCart();
 }
 
-// Botón +
 addFilterBtn.onclick = ()=>{
   const name = filterInput.value.trim();
   const qty = parseInt(filterQty.value)||1;
@@ -313,21 +294,18 @@ addFilterBtn.onclick = ()=>{
   filterInput.value=''; filterQty.value='1';
 }
 
-/* --- AÑADIDO: comportamiento para el select desplegable --- */
-if(productSelect){
-  productSelect.addEventListener('change', ()=>{
-    // si seleccionaron un producto desde el select y luego presionan el botón + original, el flujo original sigue
-    // pero añadimos una alternativa: si cambian el select y hacen doble clic o presionan Enter, agregamos automáticamente
-    // por simplicidad aquí solo dejamos la selección; el botón + original (addFilterBtn) se usará para agregar
-  });
-}
-/* --- FIN AÑADIDO --- */
+productSelect.addEventListener('change', ()=>{
+  const idx = parseInt(productSelect.value);
+  if(!isNaN(idx)){
+    const prod = products[idx];
+    filterInput.value = prod.name;
+    filterQty.value = 1;
+  }
+});
 
-// Eliminar del carrito
 function removeFromCart(i){ cart.splice(i,1); renderCart(); }
 clearCartBtn.onclick = ()=>{ if(confirm('Limpiar carrito?')){cart=[]; renderCart();} }
 
-// Cobrar
 payBtn.onclick = ()=>{
   if(cart.length===0){alert('Carrito vacío'); return;}
   const client = clientNameEl.value.trim();
@@ -342,19 +320,10 @@ payBtn.onclick = ()=>{
   saveProducts(); renderProducts();
   sales.push({ticket:ticketCounter,client,items:ventaItems,total:totalVenta,date:new Date().toISOString()});
   saveSales(); ticketCounter++; saveTicketCounter(); cart=[]; renderCart(); renderSales();
-
-  /* --- AÑADIDO: generar ticket PDF 80mm profesional y abrir vista previa de impresión --- */
-  try{
-    generateTicketPDF(ticketCounter-1, client, ventaItems, totalVenta);
-  }catch(e){
-    console.error('Error al generar ticket PDF', e);
-  }
-  /* --- FIN AÑADIDO --- */
-
+  try{ generateTicketPDF(ticketCounter-1, client, ventaItems, totalVenta); }catch(e){console.error(e);}
   alert('Venta registrada');
 }
 
-// Render ventas
 function renderSales(){
   salesList.innerHTML=''; if(sales.length===0){salesList.innerHTML='<li class="center small-note">No hay ventas hoy</li>'; salesCount.textContent='0'; salesTotal.textContent='Q0.00'; return;}
   let totalDia=0;
@@ -362,14 +331,12 @@ function renderSales(){
   salesCount.textContent=sales.length; salesTotal.textContent=formatQ(totalDia);
 }
 
-// Borrar ventas
 deleteSalesBtn.onclick = ()=>{
   const code = prompt("Ingrese código para borrar ventas:");
   if(code==='3336'){ if(confirm('Borrar ventas del día?')){ sales=[]; saveSales(); renderSales(); } }
   else{ alert("Código incorrecto"); }
 }
 
-// Exportar PDF inventario
 exportProductsBtn.onclick = ()=>{
   if(products.length===0){alert('No hay productos'); return;}
   const doc = new jsPDF();
@@ -391,111 +358,34 @@ exportProductsBtn.onclick = ()=>{
   }
 }
 
-/* ---------------------------
-   AÑADIDO: función para generar ticket 80mm profesional en PDF
-   - No reemplaza nada del original, sólo se invoca después de guardar la venta
-   - Usa jsPDF, crea un PDF en formato mm con ancho 80 mm
-   - Muestra logo (si existe) y el cintillo solicitado
-   --------------------------- */
-function generateTicketPDF(ticketNumber, client, items, total){
-  try{
-    // Formato 80mm x alto variable (usamos 80 x 200 mm canvas y extendemos si es necesario)
-    const doc = new jsPDF({unit:'mm', format:[80, 300]}); // alto generoso, luego ajustamos
-    let y = 8;
-    // logo si existe
-    const img = new Image();
-    img.src = 'LOGO1.png';
-    img.onload = function(){
-      const imgW = 40; // mm
-      const xCenter = 80 / 2;
-      doc.addImage(img, 'PNG', xCenter - (imgW/2), y, imgW, imgW * (img.height / img.width));
-      y += (imgW * (img.height / img.width)) + 2;
-      drawHeaderAndBody();
-    };
-    img.onerror = function(){
-      // si no hay logo, dibujamos sin él
-      drawHeaderAndBody();
-    };
-
-    function drawHeaderAndBody(){
-      // Encabezado
-      doc.setFontSize(12);
-      doc.setFont(undefined, 'bold');
-      doc.text("MARCKBUSINESS", 40, y, null, null, 'center');
-      y += 6;
-      doc.setFontSize(8);
-      doc.setFont(undefined, 'normal');
-      doc.text(`Ticket #${ticketNumber}`, 40, y, null, null, 'center');
-      y += 6;
-      doc.text(`Fecha: ${new Date().toLocaleDateString()}  ${new Date().toLocaleTimeString()}`, 40, y, null, null, 'center');
-      y += 6;
-      if(client) { doc.text(`Cliente: ${client}`, 40, y, null, null, 'center'); y += 6; }
-
-      // Línea separadora
-      doc.setDrawColor(0);
-      doc.setLineWidth(0.2);
-      doc.line(6, y, 74, y);
-      y += 4;
-
-      // Tabla de items (simple, manual para mejor control sobre el ancho)
-      doc.setFontSize(9);
-      const leftX = 8;
-      const qtyX = leftX;
-      const nameX = 24;
-      const totalX = 68;
-      items.forEach(it=>{
-        const lineTotal = Number(it.qty) * Number(it.price);
-        // Cantidad
-        doc.text(String(it.qty), qtyX, y.toFixed(2));
-        // Nombre (ajustar si es muy largo)
-        const maxNameLen = 20;
-        let nameToShow = it.name;
-        // wrap name if needed
-        const splitted = doc.splitTextToSize(nameToShow, totalX - nameX - 2);
-        doc.text(splitted, nameX, y.toFixed(2));
-        // total al final de la línea (alineado a la derecha)
-        doc.text(formatQ(lineTotal), totalX, y.toFixed(2), {align: 'right'});
-        // incrementar y por las líneas usadas
-        y += (splitted.length * 5) + 2;
-      });
-
-      // Línea final antes del total
-      y += 2;
-      doc.line(6, y, 74, y);
-      y += 6;
-      doc.setFontSize(11);
-      doc.setFont(undefined, 'bold');
-      doc.text(`TOTAL: ${formatQ(total)}`, 40, y, null, null, 'center');
-      y += 8;
-
-      doc.setFontSize(9);
-      doc.setFont(undefined, 'normal');
-      doc.text("¡Gracias por su compra!", 40, y, null, null, 'center');
-      y += 6;
-
-      // Cintillo informativo al final (tal como pediste)
-      doc.setFontSize(8);
-      doc.text("Desarrollado por MARCK BUSINESS SOLUTIONS", 40, y, null, null, 'center');
-      y += 4;
-      doc.text("+502 4152 9411", 40, y, null, null, 'center');
-
-      // Ajustar el tamaño del PDF al contenido (si es posible)
-      // jsPDF no permite cambiar formato después; usamos el blobURL para vista previa
-      // Abrimos la vista previa en nueva pestaña (lista para imprimir)
-      const blobUrl = doc.output('bloburl');
-      window.open(blobUrl, '_blank');
-    }
-  }catch(e){
-    console.error('generateTicketPDF error', e);
+function generateTicketPDF(ticketNum, client, items, total){
+  const doc = new jsPDF({unit:'mm',format:[80,200]});
+  const pageWidth = 80;
+  let y=5;
+  const logo = new Image();
+  logo.src='LOGO1.png';
+  logo.onload=function(){
+    const logoWidth = 50;
+    doc.addImage(logo,'PNG',(pageWidth-logoWidth)/2,y,logoWidth,20);
+    y+=25;
+    drawTicket();
+  }
+  function drawTicket(){
+    doc.setFontSize(12); doc.setFont(undefined,'bold'); doc.text(`TICKET #${ticketNum}`,pageWidth/2,y,{align:'center'}); y+=6;
+    if(client){ doc.setFontSize(10); doc.setFont(undefined,'normal'); doc.text(`Cliente: ${client}`,pageWidth/2,y,{align:'center'}); y+=6; }
+    doc.setLineWidth(0.3); doc.line(2,y,pageWidth-2,y); y+=4;
+    items.forEach(it=>{
+      doc.setFontSize(10); doc.text(`${it.qty} x ${it.name}`,2,y); doc.text(formatQ(it.price),pageWidth-2,y,{align:'right'}); y+=5;
+    });
+    doc.line(2,y,pageWidth-2,y); y+=4;
+    doc.setFontSize(12); doc.setFont(undefined,'bold'); doc.text(`TOTAL: ${formatQ(total)}`,pageWidth-2,y,{align:'right'}); y+=8;
+    doc.setFontSize(8); doc.setFont(undefined,'normal'); doc.text("MARCK BUSINESS SOLUTIONS +502 4152 9411",pageWidth/2,y,{align:'center'});
+    doc.save(`ticket_${ticketNum}.pdf`);
   }
 }
-/* ---------------------------
-   FIN AÑADIDO
-   --------------------------- */
 
 renderProducts(); renderCart(); renderSales();
 </script>
 
 </body>
 </html>
-
