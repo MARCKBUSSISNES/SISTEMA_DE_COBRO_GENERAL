@@ -30,6 +30,7 @@
 </head>
 <body>
 <div class="wrap">
+  <!-- Panel de productos -->
   <div class="card">
     <h2>Crear / Administrar Productos</h2>
     <div class="small-note">Los productos se guardan localmente en su navegador.</div>
@@ -40,7 +41,7 @@
     <label>Precio (Q)</label>
     <input id="p_price" type="number" min="0" step="0.01" placeholder="0.00" />
 
-    <label>Stock (opcional)</label>
+    <label>Stock</label>
     <input id="p_stock" type="number" min="0" step="1" placeholder="Cantidad en inventario" />
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
@@ -54,6 +55,7 @@
     <ul id="productsList" class="list"></ul>
   </div>
 
+  <!-- Panel de venta -->
   <div class="card">
     <h2>Panel de venta</h2>
     <table id="cartTable">
@@ -80,6 +82,7 @@
     <div class="small-note" style="margin-top:10px">Ticket 80mm imprimible.</div>
   </div>
 
+  <!-- Registro de ventas -->
   <div class="card">
     <h2>Registro de ventas (hoy)</h2>
     <div id="salesListWrap">
@@ -108,9 +111,9 @@
 </div>
 
 <script>
-const KEY_PRODUCTS = 'mb_products_v1';
-const KEY_SALES = 'mb_sales_v1';
-const KEY_TICKET = 'mb_ticket_counter_v1';
+const KEY_PRODUCTS = 'mb_products_v2';
+const KEY_SALES = 'mb_sales_v2';
+const KEY_TICKET = 'mb_ticket_counter_v2';
 
 let products = JSON.parse(localStorage.getItem(KEY_PRODUCTS)||'[]');
 let sales = JSON.parse(localStorage.getItem(KEY_SALES)||'[]');
@@ -149,10 +152,12 @@ function renderProducts(){
   productsList.innerHTML='';
   if(products.length===0){ productsList.innerHTML='<li class="center muted">No hay productos aún.</li>'; return; }
   products.forEach((p,idx)=>{
+    const stockText = p.stock!==undefined ? ` · Stock: ${p.stock}` : '';
+    const stockClass = (p.stock===0) ? 'muted' : '';
     const li = document.createElement('li');
-    li.innerHTML=`<div><strong>${p.name}</strong><div class="muted small">Precio: ${formatQ(p.price)} ${p.stock!==undefined?(' · Stock: '+p.stock):''}</div></div>
+    li.innerHTML=`<div><strong>${p.name}</strong><div class="muted small ${stockClass}">Precio: ${formatQ(p.price)}${stockText}</div></div>
                   <div class="product-actions">
-                    <button onclick="addToCart(${idx})">Agregar</button>
+                    <button onclick="addToCart(${idx})" ${p.stock===0?'disabled':''}>Agregar</button>
                     <button onclick="editProduct(${idx})" class="ghost">Editar</button>
                     <button onclick="deleteProduct(${idx})" class="danger">Eliminar</button>
                   </div>`;
@@ -160,10 +165,11 @@ function renderProducts(){
   });
 }
 
+// Funciones de agregar, editar y eliminar productos
 addProductBtn.addEventListener('click', ()=>{
   const name = (p_name.value||'').trim();
   const price = parseFloat(p_price.value)||0;
-  const stock = p_stock.value!==''?parseInt(p_stock.value,10):undefined;
+  const stock = p_stock.value!==''?parseInt(p_stock.value,10):0;
   if(!name){ alert('Ingrese nombre del producto'); return; }
   products.push({name, price, stock});
   saveProducts(); renderProducts(); p_name.value=''; p_price.value=''; p_stock.value='';
@@ -177,8 +183,89 @@ exportProductsBtn.addEventListener('click', ()=>{
   const a = document.createElement('a'); a.href=url; a.download='inventario.json'; a.click(); URL.revokeObjectURL(url);
 });
 
-// ... (resto de funciones de carrito, ventas, tickets, exportación CSV)
-// Puedes copiar el código que te pasé antes para completar renderCart, payBtn, generateTicket, renderSales, printDayTotal, deleteSalesBtn y exportSalesBtn.
+// Funciones de carrito
+function renderCart(){
+  cartTableBody.innerHTML='';
+  if(cart.length===0){ cartTableBody.innerHTML='<tr><td colspan="5" class="center muted">Carrito vacío</td></tr>'; cartTotalEl.textContent='Q0.00'; return; }
+  let total=0; 
+  cart.forEach((item,i)=>{
+    const lineTotal = item.qty*item.price;
+    total+=lineTotal;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${item.qty}</td><td>${item.name}</td><td class="right">${formatQ(item.price)}</td><td class="right">${formatQ(lineTotal)}</td>
+                  <td><button onclick="removeFromCart(${i})" class="danger">X</button></td>`;
+    cartTableBody.appendChild(tr);
+  });
+  cartTotalEl.textContent=formatQ(total);
+}
+
+function addToCart(idx){
+  const prod = products[idx];
+  let qty = 1;
+  const cartItem = cart.find(c=>c.idx===idx);
+  if(cartItem){ qty = cartItem.qty + 1; if(qty>prod.stock){ alert('No hay suficiente stock'); return; cartItem.qty=prod.stock; } else { cartItem.qty=qty; } }
+  else{ if(prod.stock===0){ alert('No hay stock disponible'); return; } cart.push({idx, name:prod.name, price:prod.price, qty:1}); }
+  renderCart();
+}
+
+function removeFromCart(i){ cart.splice(i,1); renderCart(); }
+
+clearCartBtn.addEventListener('click', ()=>{ if(confirm('Limpiar carrito?')){ cart=[]; renderCart(); } });
+
+// Función para cobrar y actualizar stock
+payBtn.addEventListener('click', ()=>{
+  if(cart.length===0){ alert('Carrito vacío'); return; }
+  const cliente = clientNameEl.value.trim();
+  let total=0;
+  const ventaItems = cart.map(item=>{
+    const prod = products[item.idx];
+    if(item.qty>prod.stock){ alert(`Producto ${prod.name} no tiene suficiente stock`); return; }
+    prod.stock -= item.qty;
+    saveProducts(); renderProducts();
+    const lineTotal = item.qty*item.price;
+    total+=lineTotal;
+    return {name:item.name, qty:item.qty, price:item.price, total:lineTotal};
+  });
+  sales.push({ticket:ticketCounter, client:cliente, items:ventaItems, total:total, date:new Date().toISOString()});
+  saveSales();
+  ticketCounter++; saveTicketCounter();
+  cart=[]; renderCart(); renderSales();
+  alert('Venta registrada correctamente');
+});
+
+function renderSales(){
+  salesList.innerHTML='';
+  if(sales.length===0){ salesList.innerHTML='<li class="center muted">No hay ventas hoy</li>'; salesCount.textContent='0'; salesTotal.textContent='Q0.00'; return; }
+  let totalDia=0;
+  sales.forEach(s=>{
+    totalDia+=s.total;
+    const li = document.createElement('li');
+    li.innerHTML=`<strong>Ticket ${s.ticket}</strong> ${s.client?'- '+s.client:''} <div class="right">${formatQ(s.total)}</div>`;
+    salesList.appendChild(li);
+  });
+  salesCount.textContent=sales.length;
+  salesTotal.textContent=formatQ(totalDia);
+}
+
+deleteSalesBtn.addEventListener('click', ()=>{ if(confirm('Borrar todas las ventas del día?')){ sales=[]; saveSales(); renderSales(); } });
+
+exportSalesBtn.addEventListener('click', ()=>{
+  if(sales.length===0){ alert('No hay ventas para exportar'); return; }
+  const headers=['Ticket','Cliente','Producto','Cantidad','Precio','Total','Fecha'];
+  const rows = [];
+  sales.forEach(s=>{ s.items.forEach(i=>{ rows.push([s.ticket,s.client||'',i.name,i.qty,i.price,i.total,s.date]); }); });
+  const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=`ventas_${todayKey()}.csv`; a.click(); URL.revokeObjectURL(url);
+});
+
+// Inicializar
+renderProducts(); renderCart(); renderSales();
 </script>
+
+<div style="text-align:center;margin-top:20px;font-size:0.8rem;color:#888">
+  MarckBusiness © 2025 — Todos los derechos reservados
+</div>
 </body>
 </html>
