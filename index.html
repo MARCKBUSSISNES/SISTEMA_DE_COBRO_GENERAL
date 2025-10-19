@@ -347,52 +347,50 @@ exportProductsBtn.onclick = ()=>{
   doc.save('inventario.pdf');
 }
 
+// === FUNCION TICKET CORREGIDA PARA PRODUCTOS LARGOS ===
 function generateTicketPDF(items,total,client){
-  try{
-    const doc = new jsPDF({unit:'mm', format:[80,300]});
-    let y = 8;
-    const img = new Image();
-    img.src = 'LOGO1.png';
-    img.onload = function(){
-      const imgW=40; const xCenter=80/2; const imgH = imgW*(img.height/img.width);
-      doc.addImage(img,'PNG',xCenter-imgW/2,y,imgW,imgH);
-      y+=imgH+4;
-      drawHeader();
-    }
-    img.onerror=function(){ drawHeader(); }
+  const doc = new jsPDF({unit:'mm', format:[80,300]});
+  let y = 8;
+  const img = new Image();
+  img.src = 'LOGO1.png';
+  img.onload = function(){
+    const imgW=40; const xCenter=80/2; const imgH = imgW*(img.height/img.width);
+    doc.addImage(img,'PNG',xCenter-imgW/2,y,imgW,imgH);
+    y+=imgH+4;
+    drawHeader();
+  }
+  img.onerror=function(){ drawHeader(); }
 
-    function drawHeader(){
-      doc.setFontSize(14); doc.setFont(undefined,'bold');
-      doc.text("MARCK BUSINESS",40,y,null,null,'center'); y+=6;
-      doc.setFontSize(9); doc.setFont(undefined,'normal');
-      doc.text(`Ticket #${ticketCounter}`,40,y,null,null,'center'); y+=5;
-      const fecha = new Date(); doc.text(`Fecha: ${fecha.toLocaleDateString()} ${fecha.toLocaleTimeString()}`,40,y,null,null,'center'); y+=5;
-      if(client){ doc.text(`Cliente: ${client}`,40,y,null,null,'center'); y+=5; }
-      doc.setLineWidth(0.3); doc.line(6,y,74,y); y+=3;
-      doc.setFontSize(9); doc.setFont(undefined,'normal');
-      const qtyX=8, nameX=20, totalX=72;
-      items.forEach(it=>{
-        const lineTotal = Number(it.qty)*Number(it.price);
-        const nameLines = doc.splitTextToSize(it.name, totalX-nameX-2);
-        doc.text(String(it.qty),qtyX,y);
-        doc.text(nameLines,nameX,y);
-        doc.text(formatQ(lineTotal),totalX,y,{align:'right'});
-        y+=nameLines.length*5+2;
-      });
-      y+=2; doc.line(6,y,74,y); y+=4;
-      doc.setFontSize(11); doc.setFont(undefined,'bold');
-      doc.text(`TOTAL: ${formatQ(total)}`,40,y,null,null,'center'); y+=8;
-      doc.setFontSize(9); doc.setFont(undefined,'normal');
-      doc.text("¡Gracias por su compra!",40,y,null,null,'center'); y+=5;
-      doc.setFontSize(8);
-      doc.text("Desarrollado por MARCK BUSINESS SOLUTIONS",40,y,null,null,'center'); y+=3;
-      doc.text("+502 4152 9411",40,y,null,null,'center');
-      const blobUrl = doc.output('bloburl'); window.open(blobUrl,'_blank');
-    }
-  }catch(e){ console.error('generateTicketPDF error',e);}
+  function drawHeader(){
+    doc.setFontSize(14); doc.setFont(undefined,'bold');
+    doc.text("MARCK BUSINESS",40,y,null,null,'center'); y+=6;
+    doc.setFontSize(9); doc.setFont(undefined,'normal');
+    doc.text(`Ticket #${ticketCounter}`,40,y,null,null,'center'); y+=6;
+    if(client) { doc.text(`Cliente: ${client}`,4,y); y+=5; }
+    doc.text(`Fecha: ${new Date().toLocaleString()}`,4,y); y+=6;
+
+    doc.setFont(undefined,'bold'); doc.text("Cant",4,y); doc.text("Producto",20,y); doc.text("Total",70,y,null,null,'right'); y+=4;
+    doc.setFont(undefined,'normal'); doc.setLineWidth(0.2); doc.line(4,y,76,y); y+=2;
+
+    items.forEach(item=>{
+      const qtyText = item.qty.toString();
+      const priceText = formatQ(item.price*item.qty);
+      const maxWidth = 46; // ancho maximo de nombre producto
+      const lines = doc.splitTextToSize(item.name,maxWidth);
+      doc.text(qtyText,4,y);
+      doc.text(lines,20,y);
+      doc.text(priceText,76,y,null,null,'right');
+      y+=lines.length*4;
+    });
+    y+=4; doc.setLineWidth(0.2); doc.line(4,y,76,y); y+=2;
+    doc.setFont(undefined,'bold'); doc.text(`TOTAL: ${formatQ(total)}`,4,y); y+=6;
+    doc.setFontSize(8); doc.setFont(undefined,'normal'); doc.text("¡Gracias por su compra!",40,y,null,null,'center');
+    doc.save(`ticket_${ticketCounter}.pdf`);
+  }
 }
 
-renderProducts(); renderSales(); renderCart();
+renderProducts(); renderCart(); renderSales();
 </script>
+
 </body>
 </html>
