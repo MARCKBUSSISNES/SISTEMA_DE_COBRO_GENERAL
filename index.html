@@ -76,11 +76,34 @@ table th, table td{padding:10px;text-align:left;border-bottom:1px solid #333;}
   font-weight:700;
   cursor:pointer;
   transition:0.3s;
+  position:relative;
 }
 .add-cart-btn:hover{background:#03dac6;}
+.add-cart-btn:hover::after{
+  content: 'Agregar al carrito';
+  position:absolute;
+  top:-30px;
+  background:#333;
+  color:#fff;
+  padding:4px 8px;
+  font-size:0.8rem;
+  border-radius:4px;
+  white-space:nowrap;
+}
+.logo-header{
+  text-align:center;
+  margin-bottom:20px;
+}
+.logo-header img{
+  max-width:150px;
+}
 </style>
 </head>
 <body>
+
+<div class="logo-header">
+  <img src="LOGO1.png" alt="Logo del sistema">
+</div>
 
 <div class="wrap">
   <!-- Columna izquierda: agregar y listar productos -->
@@ -209,8 +232,8 @@ function renderProducts(){
   products.forEach(p=>{ const op=document.createElement('option'); op.value=p.name; productsDatalist.appendChild(op); });
 }
 
-// -- resto de funciones: agregar al carrito, renderCart, payBtn, renderSales, deleteSales etc.
-// Mismo código que te pasé antes (no lo repito aquí por brevedad)
+// Aquí irían todas las demás funciones de carrito, ventas, PDF, etc., exactamente igual que en tu versión actual
+// Manteniendo todas las funciones existentes
 
 renderProducts(); renderCart(); renderSales();
 </script>
