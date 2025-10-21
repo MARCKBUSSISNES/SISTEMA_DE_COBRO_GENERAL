@@ -1,424 +1,500 @@
-<!doctype html>
+ <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sistema de Cobro - MarckBusiness</title>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-<style>
-:root{
-  --green:#25D366; --dark:#121212; --dark-card:#1E1E1E; --light:#f4f4f4; --accent:#03dac6;
-}
-body{
-  font-family:'Roboto Mono', monospace;
-  background:var(--dark); color:var(--light); margin:0;padding:0;
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Control de Kilometraje Vehicular</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      min-height: 100vh;
+      width: 100vw;
+      box-sizing: border-box;
+    }
+    body {
+      min-height: 100vh;
+      min-width: 100vw;
+      width: 100vw;
+      margin: 0;
+      padding: 0;
+      position: relative;
+      background: #222;
+      background-image: url('FONDO123.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    .container {
+      background: rgba(255,255,255,0.93);
+      border-radius: 1.2rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+      padding: 1.2rem .7rem 1.2rem .7rem;
+      width: 100vw;
+      max-width: 430px;
+      margin: 2.7rem auto 0 auto;
+      box-sizing: border-box;
+      text-align: center;
+      flex: 0 0 auto;
+    }
+    .logo-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      margin-bottom: .2rem;
+    }
+    .logo-header img {
+      height: 440px;
+      max-width: 360vw;
+      object-fit: contain;
+      margin: 0 auto .3rem auto;
+      background: transparent;
+      display: block;
+    }
+    h1 {
+      color: #243348;
+      font-size: 1.25rem;
+      margin-bottom: .68rem;
+      letter-spacing: .02em;
+      font-weight: 700;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: .7rem;
+      margin-bottom: 1.3rem;
+    }
+    input, select {
+      padding: .85rem;
+      border-radius: .95rem;
+      border: 1px solid #d2dbe3;
+      font-size: 1.02rem;
+      outline: none;
+      background: #f5f8fa;
+      color: #222b35;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+      width: 100%;
+      margin-bottom: 0;
+    }
+    input:focus, select:focus {
+      border-color: #00c896;
+    }
+    .row2 {
+      display: flex;
+      gap: .5rem;
+      width: 100%;
+      margin-bottom: 0;
+    }
+    .row2 > * {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    button, .btn {
+      padding: .82rem;
+      border: none;
+      border-radius: 1rem;
+      background: #00c896;
+      color: #fff;
+      font-size: 1.04rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: .22rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .btn {
+      display: inline-block;
+      padding: .5rem 1rem;
+      font-size: 1rem;
+      margin-top: 0;
+    }
+    button:active, .btn:active {
+      background: #009e6d;
+    }
+    .btn-edit { background: #3888ff; margin-right: 6px;}
+    .btn-delete { background: #ff5656;}
+    .history {
+      margin-top: 1.05rem;
+      text-align: left;
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 3px;
+      box-sizing: border-box;
+    }
+    .history-entry {
+      background: #e6fbf4;
+      margin-bottom: .57rem;
+      padding: .7rem .85rem;
+      border-radius: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      font-size: .98rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .6rem;
+      animation: fadeIn .6s;
+      word-break: break-word;
+    }
+    .entry-details {
+      flex: 1;
+      min-width: 0;
+    }
+    .date { font-size: .93rem; color: #567; font-weight: 500;}
+    .km, .qtz, .gal { font-size: .99rem; color: #222b35; font-weight: 700;}
+    .diff { font-size: .94rem; color: #00c896; font-weight: 700;}
+    .empty { color: #999; text-align: center; padding: 1.1rem 0; font-size: 1.04rem;}
+    .excel-btn, .reset-btn {
+      width: 49%;
+      display: inline-block;
+      margin-bottom: .7rem;
+      margin-top: .7rem;
+      box-sizing: border-box;
+      font-size: 1.01rem;
+      font-weight: 700;
+    }
+    .excel-btn {
+      background: #3888ff;
+      color: #fff;
+      margin-right: 2%;
+    }
+    .excel-btn:active { background: #2a60b7;}
+    .reset-btn {
+      background: #ff5656;
+      color: #fff;
+    }
+    .reset-btn:active { background: #bb2929; }
 
-/* ========== PANTALLA DE LOGIN ========== */
-#loginScreen{
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.95);
-  display:flex; justify-content:center; align-items:center;
-  z-index:9999;
-}
-#loginBox{
-  background:var(--dark-card);
-  padding:40px;
-  border-radius:16px;
-  text-align:center;
-  width:300px;
-  box-shadow:0 8px 20px rgba(0,0,0,0.5);
-}
-#loginBox h2{margin-bottom:20px;color:var(--green);}
-#loginBox input{
-  width:100%;padding:12px;margin:6px 0 12px 0;border-radius:10px;
-  border:1px solid #333;background:var(--dark);color:var(--light);box-sizing:border-box;
-}
-#loginBox button{
-  width:100%;padding:12px;border-radius:10px;border:none;background:var(--green);color:#fff;font-weight:700;cursor:pointer;transition:0.3s;
-}
-#loginBox button:hover{background:var(--accent);}
-
-/* ========== CABECERA ========== */
-#topBar{
-  position:fixed;
-  top:0; left:0; right:0;
-  height:50px;
-  display:flex; justify-content:space-between; align-items:center;
-  padding:0 20px;
-  z-index:1000;
-  background:transparent;
-}
-#topBar .userInfo{color:#ccc;font-size:0.9rem;}
-#topBar .logoTop img{height:40px;width:auto;}
-
-/* ========== WRAP ORIGINAL ========== */
-.wrap{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:20px;
-  max-width:1400px;
-  margin:80px auto 20px auto; /* Se baja por la cabecera */
-  align-items:start;
-}
-@media (max-width: 1000px){.wrap{ grid-template-columns:1fr 1fr; }}
-@media (max-width: 700px){.wrap{ grid-template-columns:1fr; }}
-
-.card{
-  background:var(--dark-card);
-  border-radius:16px;
-  padding:20px;
-  box-shadow:0 8px 20px rgba(0,0,0,0.5);
-  margin-bottom:20px;
-}
-label{font-size:0.85rem;color:#aaa;}
-input[type=text], input[type=number]{
-  width:100%;padding:10px;margin:6px 0 12px 0;border-radius:10px;
-  border:1px solid #333;background:var(--dark);color:var(--light);box-sizing:border-box;
-}
-button{
-  background:var(--green); color:#fff; border:none;padding:10px 16px;
-  border-radius:12px; cursor:pointer; font-weight:700; transition:0.3s;
-}
-button:hover{background:var(--accent);}
-.danger{background:#e74c3c;}
-.danger:hover{background:#ff5252;}
-.ghost{background:#333;color:#fff;}
-.ghost:hover{background:#555;}
-ul.list{list-style:none;padding:0;margin:0;max-height:250px;overflow:auto;}
-ul.list li{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #333;border-radius:8px;margin-bottom:6px;transition:0.3s;}
-ul.list li.highlight{background:#25D36633;}
-table{width:100%;border-collapse:collapse;margin-top:10px;}
-table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
-.right{text-align:right;}
-.center{text-align:center;}
-.small-note{font-size:0.8rem;color:#888;}
-.flex-row{display:flex;gap:10px;align-items:center;}
-.flex-row input[type=text]{flex:1;}
-.big-input{font-size:1.3rem;padding:14px;}
-.big-button{font-size:1.2rem;padding:14px 18px;}
-.sub-card{background:#1A1A1A;border-radius:12px;padding:12px;margin-top:12px;}
-.add-cart-btn{
-  border-radius:12px;
-  font-size:1.6rem;
-  width:60px;
-  height:60px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:700;
-  cursor:pointer;
-  transition:0.3s;
-  position:relative;
-}
-.add-cart-btn:hover::after{
-  content: 'Agregar al carrito';
-  position:absolute;
-  top:-30px;
-  background:#333;
-  color:#fff;
-  padding:4px 8px;
-  font-size:0.8rem;
-  border-radius:4px;
-  white-space:nowrap;
-}
-
-/* BOTON FLOTANTE LOGO */
-#scrollLogoBtn{
-  display:none;
-  position:fixed;
-  bottom:20px;
-  right:20px;
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  z-index:9999;
-  transition:0.3s;
-}
-#scrollLogoBtn img{max-width:40px;}
-</style>
+    .logo-float-btn {
+      position: fixed;
+      bottom: 18px;
+      right: 17px;
+      z-index: 20;
+      cursor: pointer;
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
+      width: 68px;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.13s;
+      border: none;
+    }
+    .logo-float-btn:hover, .logo-float-btn:active {
+      transform: scale(1.08);
+      box-shadow: none;
+    }
+    .logo-float-btn img {
+      width: 66px;
+      height: 66px;
+      object-fit: contain;
+      border-radius: 0;
+      display: block;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      margin: 0;
+    }
+    .footer-derechos {
+      text-align: center;
+      font-size: 0.97rem;
+      color: #aaa;
+      margin-top: 2rem;
+      margin-bottom: .4rem;
+      letter-spacing: 0.02em;
+      user-select: none;
+      flex: 0 0 auto;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px);}
+      to   { opacity: 1; transform: none;}
+    }
+    @media (max-width: 600px) {
+      .logo-header img { height: 80px;}
+      .logo-float-btn { width: 55px; height: 55px;}
+      .logo-float-btn img { width: 54px; height: 54px;}
+    }
+    @media (max-width: 450px) {
+      .container {
+        max-width: 99vw;
+        padding: .6rem .2rem;
+        border-radius: 0.5rem;
+      }
+      .row2 {
+        flex-direction: column;
+        gap: .25rem;
+      }
+      button, .btn, .excel-btn, .reset-btn {
+        font-size: .97rem;
+        padding: .74rem;
+      }
+      .history {
+        max-height: 195px;
+      }
+      .footer-derechos {
+        font-size: 0.85rem;
+        margin-top: 1.2rem;
+        margin-bottom: .1rem;
+      }
+    }
+  </style>
 </head>
 <body>
-
-<!-- LOGIN SCREEN -->
-<div id="loginScreen">
-  <div id="loginBox">
-    <h2>Ingreso al Sistema</h2>
-    <input type="text" id="loginUser" placeholder="Usuario"/>
-    <input type="password" id="loginPass" placeholder="Contraseña"/>
-    <button id="loginBtn">Ingresar</button>
-    <p class="small-note">Usuario: ADMIN | Contraseña: ADMIN12345</p>
+  <div class="logo-header">
+    <img src="LOGO1.png" alt="Logo Marck Business">
   </div>
-</div>
-
-<!-- CABECERA -->
-<div id="topBar">
-  <div class="userInfo" id="userInfo">Usuario: --- | Fecha: --/--/----</div>
-  <div class="logoTop"><img src="LOGO1.png" alt="Logo"></div>
-</div>
-
-<!-- WRAP ORIGINAL -->
-<div class="wrap" id="mainContent">
-  <!-- Columna izquierda: agregar productos -->
-  <div class="card">
-    <h2>Agregar producto</h2>
-    <label>Nombre</label><input id="p_name" type="text" placeholder="Ej: Polo blanco"/>
-    <label>Precio (Q)</label><input id="p_price" type="number" min="0" step="0.01"/>
-    <label>Stock</label><input id="p_stock" type="number" min="0" step="1"/>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-      <button id="addProductBtn" class="big-button">Agregar producto</button>
-      <button id="clearProductsBtn" class="danger">Borrar todo</button>
-      <button id="exportProductsBtn" class="ghost">Descargar inventario PDF</button>
+  <div class="container">
+    <h1>Control de Kilometraje</h1>
+    <div style="display:flex;gap:.6rem;justify-content:space-between;">
+      <button class="excel-btn" onclick="exportToExcel()">Descargar Excel</button>
+      <button class="reset-btn" onclick="resetData()">Resetear Datos</button>
     </div>
-    <hr/>
-    <h3>Productos disponibles</h3>
-    <ul id="productsList" class="list"></ul>
-  </div>
-
-  <!-- Columna central: búsqueda + ventas -->
-  <div class="card">
-    <div class="sub-card">
-      <h2>Buscar producto</h2>
-      <div class="flex-row">
-        <input id="filterInput" type="text" placeholder="Buscar producto..." list="productsDatalist" class="big-input"/>
-        <input id="filterQty" type="number" min="1" value="1" style="width:100px;" placeholder="Cant"/>
-        <button id="addFilterBtn" class="add-cart-btn">+</button>
-        <datalist id="productsDatalist"></datalist>
+    <form id="km-form" autocomplete="off">
+      <div class="row2">
+        <input type="number" id="km-input" min="0" required placeholder="Kilometraje">
       </div>
-
-      <div style="margin-top:8px;">
-        <label class="small-note">O seleccionar desde la lista:</label>
-        <select id="productSelect" style="width:100%;padding:10px;border-radius:10px;background:var(--dark);color:var(--light);border:1px solid #333;">
-          <option value="">-- Seleccionar producto --</option>
-        </select>
+      <div class="row2">
+        <input type="number" id="qtz-input" min="0" step="0.01" required placeholder="Gasolina Q">
+        <input type="number" id="gal-input" min="0" step="0.01" required placeholder="Gasolina Gal">
       </div>
-      <p class="small-note">Selecciona producto y cantidad para agregar al carrito.</p>
-    </div>
-
-    <div class="sub-card">
-      <h2>Ventas de hoy</h2>
-      <ul id="salesList" class="list"></ul>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-        <div><div class="small-note">Ventas</div><div id="salesCount">0</div></div>
-        <div class="right"><div class="small-note">Total</div><div id="salesTotal">Q0.00</div></div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-        <button id="deleteSales" class="danger">Borrar ventas</button>
-      </div>
+      <button type="submit" id="save-btn">Registrar / Guardar</button>
+      <input type="hidden" id="edit-index">
+    </form>
+    <div>
+      <strong>Historial de registros:</strong>
+      <div class="history" id="history"></div>
     </div>
   </div>
-
-  <!-- Columna derecha: carrito -->
-  <div class="card">
-    <h2>Carrito / Venta</h2>
-    <table id="cartTable">
-      <thead><tr><th>Cant</th><th>Producto</th><th class="right">Precio</th><th class="right">Total</th><th></th></tr></thead>
-      <tbody></tbody>
-    </table>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-      <input id="clientName" placeholder="Cliente (opcional)" style="flex:1;margin-right:10px;"/>
-      <div class="right">
-        <div class="small-note">Total</div>
-        <div id="cartTotal" style="font-size:1.4rem;font-weight:700">Q0.00</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:12px;">
-      <button id="payBtn">Cobrar</button>
-      <button id="clearCartBtn" class="ghost">Limpiar</button>
-    </div>
-    <div class="small-note">Ticket 80mm imprimible.</div>
+  <!-- Botón flotante con logo que descarga PDF -->
+  <div class="logo-float-btn" title="Descargar PDF" onclick="descargarPDF()">
+    <img src="LOGO1.png" alt="Descargar PDF">
   </div>
-</div>
+  <footer class="footer-derechos">
+    © Marck Business 2025. Todos los derechos reservados.
+  </footer>
+  <script>
+    const form = document.getElementById('km-form');
+    const kmInput = document.getElementById('km-input');
+    const qtzInput = document.getElementById('qtz-input');
+    const galInput = document.getElementById('gal-input');
+    const historyDiv = document.getElementById('history');
+    const editIndex = document.getElementById('edit-index');
+    const saveBtn = document.getElementById('save-btn');
+    const STORAGE_KEY = "km-history-v2";
+    let kmHistory = [];
 
-<!-- BOTON FLOTANTE LOGO -->
-<div id="scrollLogoBtn" title="Ir arriba"><img src="LOGO1.png" alt="Logo"></div>
+    function getCurrentDatetime() {
+      return new Date().toISOString();
+    }
+    function fmtDatetimeLocal(str) {
+      let d = new Date(str);
+      return d.toLocaleDateString('es-ES', {year: 'numeric', month: 'short', day: '2-digit'}) +
+        ' ' + d.toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
+    }
+    function loadHistory() {
+      const data = localStorage.getItem(STORAGE_KEY);
+      if(data) {
+        try { kmHistory = JSON.parse(data); }
+        catch { kmHistory = []; }
+      } else { kmHistory = []; }
+      renderHistory();
+    }
+    function saveHistory() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(kmHistory));
+    }
+    function clearForm() {
+      kmInput.value = '';
+      qtzInput.value = '';
+      galInput.value = '';
+      editIndex.value = '';
+      saveBtn.textContent = 'Registrar / Guardar';
+    }
+    function renderHistory() {
+      historyDiv.innerHTML = '';
+      if(kmHistory.length === 0) {
+        historyDiv.innerHTML = '<div class="empty">No hay registros aún.</div>';
+        return;
+      }
+      kmHistory
+        .map((entry, idx) => ({...entry, idx}))
+        .sort((a,b) => new Date(b.fecha) - new Date(a.fecha))
+        .forEach((entry, indexSorted, arr) => {
+          const entriesByDate = kmHistory.slice().sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
+          const currPos = entriesByDate.findIndex(e => e.fecha === entry.fecha && e.km === entry.km);
+          const prev = currPos > 0 ? entriesByDate[currPos-1] : null;
+          const diff = prev ? entry.km - prev.km : 0;
+          const html = `
+            <div class="history-entry">
+              <div class="entry-details">
+                <div class="date">${fmtDatetimeLocal(entry.fecha)}</div>
+                <div class="km">Km: ${Number(entry.km).toLocaleString()}</div>
+                <div class="qtz">Gasolina: Q${Number(entry.qtz).toLocaleString(undefined,{minimumFractionDigits:2})}</div>
+                <div class="gal">Galones: ${Number(entry.gal).toLocaleString(undefined,{minimumFractionDigits:2})} gal</div>
+                <div class="diff">${prev ? `+${diff} km desde anterior` : '---'}</div>
+              </div>
+              <div>
+                <button class="btn btn-edit" onclick="editEntry(${entry.idx})">Editar</button>
+              </div>
+            </div>
+          `;
+          historyDiv.insertAdjacentHTML('beforeend', html);
+        });
+    }
 
-<div style="text-align:center;margin-top:20px;font-size:0.8rem;color:#888">
-  MarckBusiness © 2025 — Todos los derechos reservados
-</div>
+    form.onsubmit = e => {
+      e.preventDefault();
+      const km = parseInt(kmInput.value, 10);
+      const qtz = parseFloat(qtzInput.value);
+      const gal = parseFloat(galInput.value);
+      const fecha = getCurrentDatetime();
 
-<script>
-const { jsPDF } = window.jspdf;
-const KEY_PRODUCTS = 'mb_products_pdf';
-const KEY_SALES = 'mb_sales_pdf';
-const KEY_TICKET = 'mb_ticket_counter_pdf';
-let products = JSON.parse(localStorage.getItem(KEY_PRODUCTS)||'[]');
-let sales = JSON.parse(localStorage.getItem(KEY_SALES)||'[]');
-let ticketCounter = parseInt(localStorage.getItem(KEY_TICKET)||'1',10);
-let cart = [];
+      if(isNaN(km) || isNaN(qtz) || isNaN(gal) || km < 0 || qtz < 0 || gal < 0) {
+        alert("Por favor, ingresa datos válidos.");
+        return;
+      }
 
-const productsList = document.getElementById('productsList');
-const addProductBtn = document.getElementById('addProductBtn');
-const clearProductsBtn = document.getElementById('clearProductsBtn');
-const exportProductsBtn = document.getElementById('exportProductsBtn');
-const p_name = document.getElementById('p_name');
-const p_price = document.getElementById('p_price');
-const p_stock = document.getElementById('p_stock');
+      let idx = editIndex.value !== '' ? parseInt(editIndex.value,10) : null;
+      let isEdit = idx !== null && !isNaN(idx);
 
-const filterInput = document.getElementById('filterInput');
-const filterQty = document.getElementById('filterQty');
-const productsDatalist = document.getElementById('productsDatalist');
-const addFilterBtn = document.getElementById('addFilterBtn');
+      let sortedEntries = kmHistory.slice().sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
+      let before = sortedEntries.find(e=>new Date(e.fecha)<new Date(fecha));
+      let after = sortedEntries.find(e=>new Date(e.fecha)>new Date(fecha));
+      if(before && km < before.km) {
+        alert("El kilometraje no puede ser menor que el registro anterior.");
+        return;
+      }
+      if(after && km > after.km) {
+        alert("El kilometraje no puede ser mayor que el siguiente registro.");
+        return;
+      }
+      if(isEdit) {
+        kmHistory[idx] = { fecha: kmHistory[idx].fecha, km, qtz, gal };
+      } else {
+        kmHistory.push({ fecha, km, qtz, gal });
+      }
+      saveHistory();
+      renderHistory();
+      clearForm();
+    };
+    window.editEntry = function(idx) {
+      const entry = kmHistory[idx];
+      kmInput.value = entry.km;
+      qtzInput.value = entry.qtz;
+      galInput.value = entry.gal;
+      editIndex.value = idx;
+      saveBtn.textContent = 'Guardar Cambios';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    window.exportToExcel = function() {
+      if(kmHistory.length === 0) {
+        alert("No hay datos para exportar.");
+        return;
+      }
+      const sorted = kmHistory.slice().sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
+      let data = [["Fecha y hora", "Kilometraje", "Gasolina Q", "Galones", "Km recorridos"]];
+      sorted.forEach((e,i)=>{
+        let diff = i===0 ? '' : (e.km - sorted[i-1].km);
+        data.push([
+          fmtDatetimeLocal(e.fecha),
+          e.km,
+          e.qtz,
+          e.gal,
+          diff
+        ]);
+      });
+      let ws = XLSX.utils.aoa_to_sheet(data);
+      let wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Kilometraje");
+      XLSX.writeFile(wb, "KilometrajeVehiculo.xlsx");
+    }
 
-const cartTableBody = document.querySelector('#cartTable tbody');
-const cartTotalEl = document.getElementById('cartTotal');
-const payBtn = document.getElementById('payBtn');
-const clearCartBtn = document.getElementById('clearCartBtn');
-const clientNameEl = document.getElementById('clientName');
+    // PDF bonito y centrado con tabla
+    function descargarPDF() {
+      if(kmHistory.length === 0) {
+        alert("No hay datos para exportar.");
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
 
-const salesList = document.getElementById('salesList');
-const salesCount = document.getElementById('salesCount');
-const salesTotal = document.getElementById('salesTotal');
-const deleteSalesBtn = document.getElementById('deleteSales');
+      // LOGO (opcional)
+      var logo = new Image();
+      logo.src = 'LOGO1.png';
 
-const productSelect = document.getElementById('productSelect');
+      // Si deseas incluir el logo, puedes hacerlo así:
+      doc.addImage('LOGO1.png', 'PNG', 85, 7, 40, 25);
 
-function saveProducts(){ localStorage.setItem(KEY_PRODUCTS, JSON.stringify(products)); }
-function saveSales(){ localStorage.setItem(KEY_SALES, JSON.stringify(sales)); }
-function saveTicketCounter(){ localStorage.setItem(KEY_TICKET, ticketCounter.toString()); }
-function formatQ(v){ return 'Q'+Number(v).toFixed(2); }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("Control de Kilometraje", 105, 38, { align: "center" });
 
-function renderProducts(){
-  productsList.innerHTML='';
-  if(products.length===0){ productsList.innerHTML='<li class="center small-note">No hay productos</li>'; return;}
-  products.forEach((p,idx)=>{
-    const li = document.createElement('li');
-    const stockClass = (p.stock===0?'small-note':'');
-    li.innerHTML=`<div><strong>${p.name}</strong> <span class="${stockClass}">(${p.stock})</span><br><span class="small-note">${formatQ(p.price)}</span></div>
-    <div style="display:flex;gap:6px">
-      <button onclick="addToCart(${idx},1)" ${p.stock===0?'disabled':''}>Agregar</button>
-      <button onclick="deleteProduct(${idx})" class="danger">Eliminar</button>
-    </div>`;
-    productsList.appendChild(li);
-  });
-  productsDatalist.innerHTML = '';
-  products.forEach(p=>{ const op=document.createElement('option'); op.value=p.name; productsDatalist.appendChild(op); });
-  productSelect.innerHTML = '<option value="">-- Seleccionar producto --</option>';
-  products.forEach(p=>{ const op=document.createElement('option'); op.value=p.name; productSelect.appendChild(op); });
-}
-function addProduct(){
-  const name = p_name.value.trim();
-  const price = parseFloat(p_price.value);
-  const stock = parseInt(p_stock.value,10);
-  if(!name||isNaN(price)||isNaN(stock)){ alert('Completa los campos correctamente'); return; }
-  products.push({name,price,stock});
-  saveProducts(); renderProducts();
-  p_name.value=''; p_price.value=''; p_stock.value='';
-}
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(13);
+      doc.text("Marck Business 2025", 105, 46, { align: "center" });
 
-function deleteProduct(idx){ if(confirm('Eliminar producto?')){ products.splice(idx,1); saveProducts(); renderProducts(); }}
+      // TABLA
+      const sorted = kmHistory.slice().sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+      const body = sorted.map((e, i, arr) => [
+        fmtDatetimeLocal(e.fecha),
+        e.km,
+        "Q" + Number(e.qtz).toLocaleString(undefined, {minimumFractionDigits:2}),
+        Number(e.gal).toLocaleString(undefined, {minimumFractionDigits:2}) + " gal",
+        i === 0 ? "" : (e.km - arr[i - 1].km)
+      ]);
 
-addProductBtn.onclick = addProduct;
-clearProductsBtn.onclick = ()=>{ if(confirm('Borrar todos los productos?')){ products=[]; saveProducts(); renderProducts(); }}
+      doc.autoTable({
+        startY: 54,
+        head: [['Fecha y hora', 'Kilometraje', 'Gasolina (Q)', 'Galones', 'Km recorridos']],
+        body: body,
+        styles: {
+          fontSize: 11,
+          halign: 'center',
+        },
+        headStyles: {
+          fillColor: [0, 200, 150],
+          textColor: 255,
+          fontStyle: 'bold',
+        },
+        bodyStyles: {
+          textColor: 30,
+        },
+        theme: 'striped',
+        margin: { left: 12, right: 12 }
+      });
 
-function addToCart(idx,qty){
-  const prod = products[idx];
-  if(prod.stock<qty){ alert('Stock insuficiente'); return; }
-  const found = cart.find(c=>c.name===prod.name);
-  if(found){ found.qty+=qty; } else { cart.push({name:prod.name,price:prod.price,qty}); }
-  prod.stock -= qty;
-  saveProducts(); renderProducts(); renderCart();
-}
+      doc.save("KilometrajeVehiculo.pdf");
+    }
+    window.descargarPDF = descargarPDF;
 
-function renderCart(){
-  cartTableBody.innerHTML='';
-  let total=0;
-  cart.forEach((c,idx)=>{
-    const tr=document.createElement('tr');
-    const lineTotal = c.price*c.qty;
-    total+=lineTotal;
-    tr.innerHTML=`<td>${c.qty}</td><td>${c.name}</td><td class="right">${formatQ(c.price)}</td><td class="right">${formatQ(lineTotal)}</td>
-    <td><button onclick="removeCartItem(${idx})" class="danger">X</button></td>`;
-    cartTableBody.appendChild(tr);
-  });
-  cartTotalEl.textContent=formatQ(total);
-}
-function removeCartItem(idx){
-  const item = cart[idx];
-  const prod = products.find(p=>p.name===item.name);
-  if(prod){ prod.stock += item.qty; }
-  cart.splice(idx,1);
-  saveProducts(); renderProducts(); renderCart();
-}
-
-function payCart(){
-  if(cart.length===0){ alert('Carrito vacío'); return; }
-  const total = cart.reduce((a,b)=>a+b.price*b.qty,0);
-  sales.push({date:new Date().toISOString(),items:[...cart],total});
-  ticketCounter++;
-  cart=[];
-  saveProducts(); saveSales(); saveTicketCounter();
-  renderCart(); renderSales();
-}
-payBtn.onclick = payCart;
-clearCartBtn.onclick = ()=>{ if(confirm('Limpiar carrito?')){ cart.forEach(c=>{ const prod = products.find(p=>p.name===c.name); if(prod)prod.stock+=c.qty; }); cart=[]; renderProducts(); renderCart(); }}
-
-function renderSales(){
-  salesList.innerHTML='';
-  let totalSum = 0;
-  sales.forEach((s,idx)=>{
-    const li=document.createElement('li');
-    li.innerHTML=`<div>${new Date(s.date).toLocaleString()} - ${s.items.map(i=>i.qty+'x'+i.name).join(', ')}</div><div class="right">${formatQ(s.total)}</div>`;
-    salesList.appendChild(li);
-    totalSum += s.total;
-  });
-  salesCount.textContent = sales.length;
-  salesTotal.textContent = formatQ(totalSum);
-}
-deleteSalesBtn.onclick = ()=>{ if(confirm('Borrar todas las ventas?')){ sales=[]; saveSales(); renderSales(); } }
-
-addFilterBtn.onclick = ()=>{
-  const name = filterInput.value.trim();
-  const qty = parseInt(filterQty.value,10);
-  if(!name || isNaN(qty)||qty<1){ alert('Completa los campos'); return;}
-  const idx = products.findIndex(p=>p.name===name);
-  if(idx===-1){ alert('Producto no encontrado'); return;}
-  addToCart(idx,qty);
-  filterInput.value=''; filterQty.value='1';
-}
-productSelect.onchange = ()=>{ const idx = products.findIndex(p=>p.name===productSelect.value); if(idx!==-1)addToCart(idx,1); productSelect.value=''; }
-
-renderProducts();
-renderSales();
-
-// LOGIN SCREEN
-const loginScreen = document.getElementById('loginScreen');
-const loginBtn = document.getElementById('loginBtn');
-loginBtn.onclick = ()=>{
-  const u = document.getElementById('loginUser').value.trim();
-  const p = document.getElementById('loginPass').value.trim();
-  if(u==='ADMIN' && p==='ADMIN12345'){
-    loginScreen.style.display='none';
-    updateTopBar();
-  } else {
-    alert('Usuario o contraseña incorrectos');
-  }
-}
-
-// TOP BAR
-const userInfoEl = document.getElementById('userInfo');
-function updateTopBar(){
-  const now = new Date();
-  const dStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
-  userInfoEl.textContent = 'Usuario: ADMIN | Fecha: '+dStr;
-}
-
-// BOTON FLOTANTE LOGO
-const scrollLogoBtn = document.getElementById('scrollLogoBtn');
-window.addEventListener('scroll',()=>{
-  if(window.scrollY>100){ scrollLogoBtn.style.display='flex'; }
-  else{ scrollLogoBtn.style.display='none'; }
-});
-scrollLogoBtn.addEventListener('click',()=>{ window.scrollTo({top:0,behavior:'smooth'}); })
-
-</script>
+    window.resetData = function() {
+      let clave = prompt("Para resetear todos los datos, ingrese la clave:");
+      if(clave === null) return;
+      if(clave === "22782522") {
+        if(confirm("¿Está seguro que desea borrar TODOS los datos? Esta acción no se puede deshacer.")) {
+          localStorage.removeItem(STORAGE_KEY);
+          kmHistory = [];
+          renderHistory();
+          clearForm();
+          alert("¡Todos los datos han sido borrados!");
+        }
+      } else {
+        alert("Clave incorrecta. No se han borrado los datos.");
+      }
+    }
+    clearForm();
+    loadHistory();
+  </script>
 </body>
 </html>
