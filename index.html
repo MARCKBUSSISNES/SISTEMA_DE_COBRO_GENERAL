@@ -100,6 +100,7 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
 }
 .logo-header img{max-width:60px;}
 .logo-header .logo-name{color:var(--green);font-weight:700;font-size:1.05rem;vertical-align:middle;}
+#topInfo{color:var(--light);font-size:0.9rem;}
 
 /* LOGIN OVERLAY */
 #loginOverlay{
@@ -110,10 +111,6 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
 #loginCard h2{margin-bottom:20px;}
 #loginCard input{margin-bottom:12px;}
 #loginCard button{width:100%;margin-top:10px;}
-
-#topInfo{
-  color:var(--light);font-size:0.9rem;
-}
 
 #homeBtn{
   position:fixed;bottom:10px;right:10px;width:60px;height:60px;cursor:pointer;
@@ -160,7 +157,7 @@ let currentUser = '';
 loginBtn.onclick = ()=>{
   const user = loginUser.value.trim();
   const pin = loginPIN.value.trim();
-  if(user==='ADMIN PRUEBAS' && pin==='123456'){
+  if(user==='ADMIN' && pin==='ADMIN12345'){
     currentUser = user;
     loginOverlay.style.display='none';
     updateTopInfo();
