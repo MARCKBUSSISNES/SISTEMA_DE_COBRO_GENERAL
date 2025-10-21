@@ -88,19 +88,24 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
 }
 /* Modificación para animación del logo al hacer scroll */
 .logo-header{
-  text-align:center;margin-bottom:20px;
+  text-align:center;margin-bottom:10px; /* más pequeña */
   transition:all 0.45s ease;
   position:sticky;
   top:0;
   z-index:1000;
   background:transparent;
-  padding:12px 0;
+  padding:6px 0; /* reducido de 12px a 6px */
 }
 .logo-header img{max-width:150px;transition:all 0.45s ease;vertical-align:middle;}
 .logo-name{display:none;color:var(--green);font-weight:700;font-size:1.05rem;margin-left:10px;vertical-align:middle;transition:all 0.45s ease;}
 
 /* Estado cuando la página está scrolleada */
-.logo-header.scrolled{ text-align:left; padding:8px 20px; background:var(--dark); box-shadow:0 6px 18px rgba(0,0,0,0.5); }
+.logo-header.scrolled{
+  text-align:left;
+  padding:4px 10px; /* reducido de 8px 20px */
+  background:var(--dark);
+  box-shadow:0 6px 18px rgba(0,0,0,0.5);
+}
 .logo-header.scrolled img{ max-width:60px; }
 .logo-header.scrolled .logo-name{ display:inline-block; }
 
@@ -367,50 +372,36 @@ exportProductsBtn.onclick = ()=>{
 // === FUNCION TICKET CORREGIDA PARA PRODUCTOS LARGOS ===
 function generateTicketPDF(items,total,client){
   const doc = new jsPDF({unit:'mm', format:[80,300]});
-  let y = 8;
-  const img = new Image();
-  img.src='LOGO1.png';
-  img.onload = ()=>{
-    doc.addImage(img, 'PNG', 5, y, 70, 20);
-    y+=25;
-    doc.setFontSize(10);
-    doc.text(`Cliente: ${client||'---'}`,5,y); y+=6;
-    doc.text(`Fecha: ${new Date().toLocaleString()}`,5,y); y+=6;
-    doc.text(`Ticket: ${ticketCounter}`,5,y); y+=6;
-    doc.text('-------------------------------',5,y); y+=6;
-    items.forEach(it=>{
-      const name = it.name.length>20 ? it.name.slice(0,20)+'...' : it.name;
-      doc.text(`${it.qty} x ${name}`,5,y); y+=5;
-      doc.text(`${formatQ(it.price)}  => ${formatQ(it.price*it.qty)}`,5,y); y+=5;
-    });
-    doc.text('-------------------------------',5,y); y+=6;
-    doc.setFontSize(12); doc.text(`TOTAL: ${formatQ(total)}`,5,y); y+=10;
-    doc.save(`ticket_${ticketCounter}.pdf`);
-  }
+  let y=5;
+  doc.setFontSize(10); doc.text('MARCKBUSINESS',40,y,{align:'center'}); y+=6;
+  doc.setFontSize(8); doc.text(`Cliente: ${client||'---'}`,2,y); y+=5;
+  doc.text(`Ticket: ${ticketCounter}`,2,y); y+=5;
+  doc.text('Cant  Producto                  Total',2,y); y+=5;
+  doc.setLineWidth(0.3); doc.line(2,y,78,y); y+=2;
+  items.forEach(it=>{
+    const name = it.name.length>18 ? it.name.slice(0,18)+'...' : it.name;
+    doc.text(`${it.qty}`,2,y);
+    doc.text(name,10,y);
+    const totalItem = (it.qty*it.price).toFixed(2);
+    doc.text(totalItem,70,y,{align:'right'});
+    y+=5;
+  });
+  doc.setLineWidth(0.3); doc.line(2,y,78,y); y+=2;
+  doc.text(`TOTAL: Q${total.toFixed(2)}`,2,y);
+  doc.save(`TICKET_${ticketCounter}.pdf`);
 }
 
-// === SCROLL LOGO ARREGLO ===
-(function(){
+// === SCROLL LOGO HEADER ===
+window.addEventListener('scroll',()=>{
   const header = document.querySelector('.logo-header');
-  let ticking = false;
-  window.addEventListener('scroll', function() {
-    if(!ticking){
-      window.requestAnimationFrame(function(){
-        if(window.scrollY > 50){
-          header.classList.add('scrolled');
-        } else {
-          header.classList.remove('scrolled');
-        }
-        ticking = false;
-      });
-      ticking = true;
-    }
-  });
-})();
+  if(window.scrollY>20){ header.classList.add('scrolled'); }
+  else{ header.classList.remove('scrolled'); }
+})
 
 renderProducts();
 renderSales();
 renderCart();
+
 </script>
 
 </body>
