@@ -96,7 +96,9 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
   background:var(--dark);
   padding:12px 20px;
   box-shadow:0 6px 18px rgba(0,0,0,0.5);
+  display:flex;justify-content:space-between;align-items:center;
 }
+.logo-header img{max-width:60px;}
 .logo-header .logo-name{color:var(--green);font-weight:700;font-size:1.05rem;vertical-align:middle;}
 
 /* LOGIN OVERLAY */
@@ -110,7 +112,7 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
 #loginCard button{width:100%;margin-top:10px;}
 
 #topInfo{
-  position:absolute;right:20px;top:12px;color:var(--light);font-size:0.9rem;
+  color:var(--light);font-size:0.9rem;
 }
 
 #homeBtn{
@@ -132,24 +134,20 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
   </div>
 </div>
 
-<!-- HEADER SIN LOGO CENTRAL -->
+<!-- HEADER FIJO ARRIBA -->
 <div class="logo-header">
+  <img src="LOGO1.png" alt="Logo">
   <span class="logo-name">MARCKBUSINESS</span>
   <div id="topInfo"></div>
 </div>
 
 <div class="wrap">
-  <!-- TODO EL CÓDIGO ORIGINAL DE TUS CARDS, COLUMNA IZQUIERDA, CENTRAL Y DERECHA -->
-  <!-- Copia aquí exactamente todo tu HTML original de productos, carrito, ventas, etc. -->
+  <!-- AQUI VA TODO TU CODIGO ORIGINAL DE COLUMNA IZQUIERDA, CENTRAL Y DERECHA -->
 </div>
 
 <!-- BOTON HOME -->
 <div id="homeBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">
   <img src="LOGO1.png" alt="Inicio">
-</div>
-
-<div style="text-align:center;margin-top:20px;font-size:0.8rem;color:#888">
-  MarckBusiness © 2025 — Todos los derechos reservados
 </div>
 
 <script>
@@ -181,9 +179,9 @@ function updateTopInfo(){
   },1000);
 }
 
-// === AQUÍ VA TODO EL CÓDIGO JS ORIGINAL DE TU SISTEMA ===
-// Funciones para productos, carrito, ventas, tickets, etc.
-// No se cambia nada de tu código original.
+// === TODO EL JS ORIGINAL DE TU SISTEMA ===
+// productos, carrito, ventas, tickets, etc.
+// Mantener intacto, no se cambia nada.
 </script>
 
 </body>
