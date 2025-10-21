@@ -86,7 +86,8 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
   border-radius:4px;
   white-space:nowrap;
 }
-/* Logo header */
+
+/* HEADER FIJO SIN LOGO */
 .logo-header{
   text-align:left;margin-bottom:20px;
   transition:all 0.45s ease;
@@ -96,10 +97,8 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
   background:var(--dark);
   padding:12px 20px;
   box-shadow:0 6px 18px rgba(0,0,0,0.5);
-  display:flex;justify-content:space-between;align-items:center;
+  display:flex;justify-content:flex-end;align-items:center;
 }
-.logo-header img{max-width:60px;}
-.logo-header .logo-name{color:var(--green);font-weight:700;font-size:1.05rem;vertical-align:middle;}
 #topInfo{color:var(--light);font-size:0.9rem;}
 
 /* LOGIN OVERLAY */
@@ -107,15 +106,9 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
   position:fixed;top:0;left:0;width:100%;height:100%;background:var(--dark);display:flex;align-items:center;justify-content:center;z-index:9999;
 }
 #loginCard{background:var(--dark-card);padding:30px;border-radius:20px;text-align:center;width:320px;box-shadow:0 8px 25px rgba(0,0,0,0.6);}
-#loginCard img{max-width:120px;margin-bottom:20px;}
 #loginCard h2{margin-bottom:20px;}
 #loginCard input{margin-bottom:12px;}
 #loginCard button{width:100%;margin-top:10px;}
-
-#homeBtn{
-  position:fixed;bottom:10px;right:10px;width:60px;height:60px;cursor:pointer;
-}
-#homeBtn img{width:100%;height:100%;}
 </style>
 </head>
 <body>
@@ -123,7 +116,6 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
 <!-- LOGIN OVERLAY -->
 <div id="loginOverlay">
   <div id="loginCard">
-    <img src="LOGO1.png" alt="Logo">
     <h2>Ingreso al sistema</h2>
     <input type="text" id="loginUser" placeholder="Usuario">
     <input type="password" id="loginPIN" placeholder="PIN">
@@ -133,18 +125,11 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
 
 <!-- HEADER FIJO ARRIBA -->
 <div class="logo-header">
-  <img src="LOGO1.png" alt="Logo">
-  <span class="logo-name">MARCKBUSINESS</span>
   <div id="topInfo"></div>
 </div>
 
 <div class="wrap">
   <!-- AQUI VA TODO TU CODIGO ORIGINAL DE COLUMNA IZQUIERDA, CENTRAL Y DERECHA -->
-</div>
-
-<!-- BOTON HOME -->
-<div id="homeBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-  <img src="LOGO1.png" alt="Inicio">
 </div>
 
 <script>
@@ -177,8 +162,6 @@ function updateTopInfo(){
 }
 
 // === TODO EL JS ORIGINAL DE TU SISTEMA ===
-// productos, carrito, ventas, tickets, etc.
-// Mantener intacto, no se cambia nada.
 </script>
 
 </body>
