@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rapiventas Marck Business</title>
+<title>Sistema de Cobro - MarckBusiness</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -48,7 +48,7 @@ button:hover{background:var(--accent);}
 .ghost{background:#333;color:#fff;}
 .ghost:hover{background:#555;}
 ul.list{list-style:none;padding:0;margin:0;max-height:250px;overflow:auto;}
-ul.list li{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #333;border-radius:8px;margin-bottom:6px;transition:0.3s;}
+ul.list li{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #333;border-radius:8px;margin-bottom:6px;}
 ul.list li.highlight{background:#25D36633;}
 table{width:100%;border-collapse:collapse;margin-top:10px;}
 table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
@@ -86,14 +86,25 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
   border-radius:4px;
   white-space:nowrap;
 }
-.logo-header{text-align:center;margin-bottom:20px;}
-.logo-header img{max-width:150px;}
+/* HEADER FIJO SIN ANIMACION */
+.logo-header{
+  text-align:center;
+  margin-bottom:20px;
+  position:sticky;
+  top:0;
+  z-index:1000;
+  background:var(--dark);
+  padding:12px 0;
+}
+.logo-header img{max-width:150px; vertical-align:middle;}
+.logo-name{display:inline-block;color:var(--green);font-weight:700;font-size:1.05rem;margin-left:10px;vertical-align:middle;}
 </style>
 </head>
 <body>
 
 <div class="logo-header">
   <img src="LOGO1.png" alt="Logo del sistema">
+  <span class="logo-name">MARCKBUSINESS</span>
 </div>
 
 <div class="wrap">
@@ -347,24 +358,50 @@ exportProductsBtn.onclick = ()=>{
   doc.save('inventario.pdf');
 }
 
-// === FUNCION TICKET CORREGIDA PARA PRODUCTOS LARGOS ===
+// TICKET
 function generateTicketPDF(items,total,client){
-  try{
-    const doc = new jsPDF({unit:'mm', format:[80,300]});
-    let y = 8;
-    const img = new Image();
-    img.src = 'LOGO1.png';
-    img.onload = function(){
-      const imgW=40; const xCenter=80/2; const imgH = imgW*(img.height/img.width);
-      doc.addImage(img,'PNG',xCenter-imgW/2,y,imgW,imgH);
-      y+=imgH+4;
-      drawHeader();
-    }
-    img.onerror=function(){ drawHeader(); }
+  const doc = new jsPDF({unit:'mm', format:[80,300]});
+  let y = 8;
+  const img = new Image();
+  img.src = 'LOGO1.png';
+  img.onload = function(){
+    const imgW=40; const xCenter=80/2; const imgH = imgW*(img.height/img.width);
+    doc.addImage(img,'PNG',xCenter-imgW/2,y,imgW,imgH);
+    y+=imgH+4;
+    drawHeader();
+  }
+  img.onerror=function(){ drawHeader(); }
 
-    function drawHeader(){
-      doc.setFontSize(14); doc.setFont(undefined,'bold');
-      doc.text("MARCK BUSINESS",40,y,null,null,'center'); y+=6;
-      doc.setFontSize(9); doc.setFont(undefined,'normal');
-      doc.text(`Ticket #${ticketCounter}`,40,y,null,null,'center
+  function drawHeader(){
+    doc.setFontSize(14); doc.setFont(undefined,'bold');
+    doc.text("MARCK BUSINESS",40,y,null,null,'center'); y+=6;
+    doc.setFontSize(9); doc.setFont(undefined,'normal');
+    doc.text(`Ticket #${ticketCounter}`,40,y,null,null,'center'); y+=6;
+    if(client) { doc.text(`Cliente: ${client}`,4,y); y+=5; }
+    doc.text(`Fecha: ${new Date().toLocaleString()}`,4,y); y+=6;
 
+    doc.setFont(undefined,'bold'); doc.text("Cant",4,y); doc.text("Producto",20,y); doc.text("Total",70,y,null,null,'right'); y+=4;
+    doc.setFont(undefined,'normal'); doc.setLineWidth(0.2); doc.line(4,y,76,y); y+=2;
+
+    items.forEach(item=>{
+      const qtyText = item.qty.toString();
+      const priceText = formatQ(item.price*item.qty);
+      const maxWidth = 46; // ancho maximo de nombre producto
+      const lines = doc.splitTextToSize(item.name,maxWidth);
+      doc.text(qtyText,4,y);
+      doc.text(lines,20,y);
+      doc.text(priceText,76,y,null,null,'right');
+      y+=lines.length*4;
+    });
+    y+=4; doc.setLineWidth(0.2); doc.line(4,y,76,y); y+=2;
+    doc.setFont(undefined,'bold'); doc.text(`TOTAL: ${formatQ(total)}`,4,y); y+=6;
+    doc.setFontSize(8); doc.setFont(undefined,'normal'); doc.text("¡Gracias por su compra!",40,y,null,null,'center');
+    doc.save(`ticket_${ticketCounter}.pdf`);
+  }
+}
+
+renderProducts(); renderCart(); renderSales();
+</script>
+
+</body>
+</html>
