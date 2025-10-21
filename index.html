@@ -215,11 +215,125 @@ function renderProducts(){
 }
 
 // ————————————————————————————————————————————————————————————————————
-// Resto de funciones: agregar producto, carrito, ventas, PDF, ticket
-// Las funciones ya están depuradas con sintaxis correcta y manejo de productos largos
-// … (siguen exactamente como tu código corregido anteriormente) 
+// Funciones: agregar productos, carrito, ventas, ticket, PDF
+// Incluye manejo de nombres largos y ticket 80mm
 // ————————————————————————————————————————————————————————————————————
 
+function addProduct(){
+  const name=p_name.value.trim();
+  const price=parseFloat(p_price.value);
+  const stock=parseInt(p_stock.value,10);
+  if(!name || isNaN(price) || isNaN(stock)){ alert('Complete todos los campos correctamente'); return; }
+  products.push({name,price,stock});
+  saveProducts(); renderProducts();
+  p_name.value=''; p_price.value=''; p_stock.value='';
+}
+
+function deleteProduct(idx){ products.splice(idx,1); saveProducts(); renderProducts(); }
+
+function addToCart(idx,qty){
+  const p = products[idx];
+  if(p.stock<qty){ alert('Stock insuficiente'); return; }
+  const inCart = cart.find(c=>c.name===p.name);
+  if(inCart){ inCart.qty+=qty; inCart.total=inCart.qty*p.price; }
+  else{ cart.push({name:p.name,price:p.price,qty,total:p.price*qty}); }
+  p.stock-=qty; saveProducts(); renderProducts(); renderCart();
+}
+
+function renderCart(){
+  cartTableBody.innerHTML='';
+  let total=0;
+  cart.forEach((c,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${c.qty}</td>
+                  <td>${c.name}</td>
+                  <td class="right">${formatQ(c.price)}</td>
+                  <td class="right">${formatQ(c.total)}</td>
+                  <td><button onclick="removeFromCart(${i})" class="danger">X</button></td>`;
+    cartTableBody.appendChild(tr);
+    total+=c.total;
+  });
+  cartTotalEl.textContent=formatQ(total);
+}
+
+function removeFromCart(idx){
+  const item=cart[idx];
+  const prodIdx=products.findIndex(p=>p.name===item.name);
+  if(prodIdx>=0){ products[prodIdx].stock+=item.qty; saveProducts(); renderProducts(); }
+  cart.splice(idx,1);
+  renderCart();
+}
+
+function clearCart(){ cart=[]; renderCart(); renderProducts(); }
+
+function payCart(){
+  if(cart.length===0){ alert('El carrito está vacío'); return; }
+  const client=clientNameEl.value.trim()||'Cliente';
+  let total=cart.reduce((acc,c)=>acc+c.total,0);
+  sales.push({client,date:new Date().toLocaleString(),items:[...cart],total});
+  saveSales(); ticketCounter++; saveTicketCounter();
+  renderSales(); generateTicketPDF(cart,client,total); clearCart(); clientNameEl.value='';
+}
+
+function renderSales(){
+  salesList.innerHTML='';
+  let totalSales=0;
+  sales.forEach((s,i)=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<div><strong>${s.client}</strong> <span class="small-note">${s.date}</span></div>
+                  <div class="right">${formatQ(s.total)}</div>`;
+    salesList.appendChild(li);
+    totalSales+=s.total;
+  });
+  salesCount.textContent=sales.length;
+  salesTotal.textContent=formatQ(totalSales);
+}
+
+function deleteSales(){ if(confirm('Borrar todas las ventas?')){ sales=[]; saveSales(); renderSales(); } }
+
+function generateTicketPDF(cartItems,client,total){
+  const doc = new jsPDF({unit:'mm',format:[80,200]});
+  doc.setFontSize(12); doc.setFont('helvetica','bold');
+  doc.text('MARCKBUSINESS',40,10,{align:'center'});
+  doc.setFontSize(9); doc.text(`Ticket #: ${ticketCounter}`,5,20);
+  doc.text(`Cliente: ${client}`,5,25);
+  doc.text(`Fecha: ${new Date().toLocaleString()}`,5,30);
+  let y=35;
+  doc.setFont('helvetica','normal');
+  cartItems.forEach(c=>{
+    let name=c.name;
+    if(name.length>20){ name=name.substring(0,20)+'...'; }
+    doc.text(`${c.qty} x ${name}`,5,y);
+    doc.text(formatQ(c.total),70,y,{align:'right'});
+    y+=6;
+  });
+  doc.text('-------------------------------',5,y); y+=6;
+  doc.setFont('helvetica','bold'); doc.text(`Total: ${formatQ(total)}`,5,y);
+  doc.save(`Ticket_${ticketCounter}.pdf`);
+}
+
+// Eventos
+addProductBtn.addEventListener('click',addProduct);
+clearProductsBtn.addEventListener('click',()=>{ if(confirm('Borrar todos los productos?')){ products=[]; saveProducts(); renderProducts(); } });
+exportProductsBtn.addEventListener('click',()=>{ if(products.length===0){ alert('No hay productos'); return; }
+  const doc=new jsPDF(); doc.text('INVENTARIO MARCKBUSINESS',10,10);
+  let y=20;
+  products.forEach((p,i)=>{ doc.text(`${i+1}. ${p.name} - Q${p.price} - Stock: ${p.stock}`,10,y); y+=10; });
+  doc.save('Inventario.pdf');
+});
+addFilterBtn.addEventListener('click',()=>{
+  const name=filterInput.value.trim(); const qty=parseInt(filterQty.value,10)||1;
+  const idx=products.findIndex(p=>p.name.toLowerCase()===name.toLowerCase());
+  if(idx>=0){ addToCart(idx,qty); filterInput.value=''; filterQty.value='1'; }
+  else{ alert('Producto no encontrado'); }
+});
+clearCartBtn.addEventListener('click',clearCart);
+payBtn.addEventListener('click',payCart);
+deleteSalesBtn.addEventListener('click',deleteSales);
+
+productSelect.addEventListener('change',()=>{ const idx=parseInt(productSelect.value,10); if(!isNaN(idx)){ addToCart(idx,1); productSelect.value=''; } });
+
+// Inicializar
 renderProducts();
 renderCart();
 renderSales();
