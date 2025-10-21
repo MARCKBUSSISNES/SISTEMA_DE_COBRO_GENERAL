@@ -1,4 +1,4 @@
-<!doctype html>
+ <!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
@@ -9,21 +9,39 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 <style>
 :root{
-  --green:#25D366;
-  --dark:#121212;
-  --dark-card:#1E1E1E;
-  --light:#f4f4f4;
-  --accent:#03dac6;
+  --green:#25D366; --dark:#121212; --dark-card:#1E1E1E; --light:#f4f4f4; --accent:#03dac6;
 }
-body{ font-family:'Roboto Mono', monospace; background:var(--dark); color:var(--light); margin:0;padding:20px; }
+body{
+  font-family:'Roboto Mono', monospace;
+  background:var(--dark); color:var(--light); margin:0;padding:20px;
+}
 h2,h3{margin:0 0 10px 0;color:var(--green);}
-.wrap{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; max-width:1400px; margin:auto; align-items:start; }
+.wrap{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:20px;
+  max-width:1400px;
+  margin:auto;
+  align-items:start;
+}
 @media (max-width: 1000px){.wrap{ grid-template-columns:1fr 1fr; }}
 @media (max-width: 700px){.wrap{ grid-template-columns:1fr; }}
-.card{ background:var(--dark-card); border-radius:16px; padding:20px; box-shadow:0 8px 20px rgba(0,0,0,0.5); margin-bottom:20px; }
+.card{
+  background:var(--dark-card);
+  border-radius:16px;
+  padding:20px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.5);
+  margin-bottom:20px;
+}
 label{font-size:0.85rem;color:#aaa;}
-input[type=text], input[type=number]{ width:100%;padding:10px;margin:6px 0 12px 0;border-radius:10px; border:1px solid #333;background:var(--dark);color:var(--light);box-sizing:border-box; }
-button{ background:var(--green); color:#fff; border:none;padding:10px 16px; border-radius:12px; cursor:pointer; font-weight:700; transition:0.3s; }
+input[type=text], input[type=number]{
+  width:100%;padding:10px;margin:6px 0 12px 0;border-radius:10px;
+  border:1px solid #333;background:var(--dark);color:var(--light);box-sizing:border-box;
+}
+button{
+  background:var(--green); color:#fff; border:none;padding:10px 16px;
+  border-radius:12px; cursor:pointer; font-weight:700; transition:0.3s;
+}
 button:hover{background:var(--accent);}
 .danger{background:#e74c3c;}
 .danger:hover{background:#ff5252;}
@@ -42,65 +60,58 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
 .big-input{font-size:1.3rem;padding:14px;}
 .big-button{font-size:1.2rem;padding:14px 18px;}
 .sub-card{background:#1A1A1A;border-radius:12px;padding:12px;margin-top:12px;}
-.add-cart-btn{ background:#25D366; border-radius:12px; font-size:1.6rem; width:60px; height:60px; display:flex; align-items:center; justify-content:center; font-weight:700; cursor:pointer; transition:0.3s; position:relative; }
+.add-cart-btn{
+  background:#25D366;
+  border-radius:12px;
+  font-size:1.6rem;
+  width:60px;
+  height:60px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  cursor:pointer;
+  transition:0.3s;
+  position:relative;
+}
 .add-cart-btn:hover{background:#03dac6;}
-.add-cart-btn:hover::after{ content: 'Agregar al carrito'; position:absolute; top:-30px; background:#333; color:#fff; padding:4px 8px; font-size:0.8rem; border-radius:4px; white-space:nowrap; }
-/* Logo header animado */
-.logo-header{ text-align:center;margin-bottom:20px; transition:all 0.45s ease; position:sticky; top:0; z-index:1000; background:transparent; padding:12px 0; }
+.add-cart-btn:hover::after{
+  content: 'Agregar al carrito';
+  position:absolute;
+  top:-30px;
+  background:#333;
+  color:#fff;
+  padding:4px 8px;
+  font-size:0.8rem;
+  border-radius:4px;
+  white-space:nowrap;
+}
+/* Modificación para animación del logo al hacer scroll */
+.logo-header{
+  text-align:center;margin-bottom:20px;
+  transition:all 0.45s ease;
+  position:sticky;
+  top:0;
+  z-index:1000;
+  background:transparent;
+  padding:12px 0;
+}
 .logo-header img{max-width:150px;transition:all 0.45s ease;vertical-align:middle;}
 .logo-name{display:none;color:var(--green);font-weight:700;font-size:1.05rem;margin-left:10px;vertical-align:middle;transition:all 0.45s ease;}
+
+/* Estado cuando la página está scrolleada */
 .logo-header.scrolled{ text-align:left; padding:8px 20px; background:var(--dark); box-shadow:0 6px 18px rgba(0,0,0,0.5); }
 .logo-header.scrolled img{ max-width:60px; }
 .logo-header.scrolled .logo-name{ display:inline-block; }
 
-/* Botón flotante */
-#scrollTopBtn{position:fixed;bottom:20px;right:20px;width:50px;height:50px;border-radius:50%;border:none;cursor:pointer;font-size:1.5rem; display:flex;align-items:center;justify-content:center;z-index:1000; transition:0.3s;}
-#scrollTopBtn:hover{opacity:0.8;}
-
-/* Logo pequeño superior derecho y datos usuario/fecha */
-#topRight{position:fixed;top:12px;right:20px;display:flex;align-items:center;gap:12px;z-index:1000;}
-#topRight img{width:50px;height:auto;}
-#topRight .info{color:#fff;font-size:0.85rem;text-align:right;}
-#topRight .info div{margin:2px 0;}
-
-/* Login overlay */
-#loginOverlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:2000;}
-#loginBox{background:#1E1E1E;padding:30px;border-radius:16px;width:300px;display:flex;flex-direction:column;gap:12px;}
-#loginBox h2{color:var(--green);text-align:center;}
-#loginBox input{padding:10px;border-radius:10px;border:1px solid #333;background:var(--dark);color:#fff;}
-#loginBox button{padding:10px;border-radius:10px;background:var(--green);border:none;color:#fff;font-weight:700;cursor:pointer;}
-#loginBox button:hover{background:var(--accent);}
 </style>
 </head>
 <body>
 
-<!-- Login Overlay -->
-<div id="loginOverlay">
-  <div id="loginBox">
-    <h2>Acceso al Sistema</h2>
-    <input id="loginUser" type="text" placeholder="Usuario">
-    <input id="loginPass" type="password" placeholder="Contraseña">
-    <button id="loginBtn">Ingresar</button>
-  </div>
-</div>
-
-<!-- Logo principal -->
 <div class="logo-header">
   <img src="LOGO1.png" alt="Logo del sistema">
   <span class="logo-name">MARCKBUSINESS</span>
 </div>
-
-<!-- Top right logo y datos -->
-<div id="topRight">
-  <img src="LOGO1.png" alt="Logo pequeño">
-  <div class="info">
-    <div id="userName">Usuario: ADMIN</div>
-    <div id="dateTime"></div>
-  </div>
-</div>
-
-<!-- Botón flotante subir -->
-<button id="scrollTopBtn" title="Ir arriba">&#8679;</button>
 
 <div class="wrap">
   <!-- Columna izquierda: agregar productos -->
@@ -129,6 +140,7 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
         <button id="addFilterBtn" class="add-cart-btn">+</button>
         <datalist id="productsDatalist"></datalist>
       </div>
+
       <div style="margin-top:8px;">
         <label class="small-note">O seleccionar desde la lista:</label>
         <select id="productSelect" style="width:100%;padding:10px;border-radius:10px;background:var(--dark);color:var(--light);border:1px solid #333;">
@@ -137,6 +149,7 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
       </div>
       <p class="small-note">Selecciona producto y cantidad para agregar al carrito.</p>
     </div>
+
     <div class="sub-card">
       <h2>Ventas de hoy</h2>
       <ul id="salesList" class="list"></ul>
@@ -178,19 +191,14 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
 
 <script>
 const { jsPDF } = window.jspdf;
-
-// LLAVES almacenamiento local
 const KEY_PRODUCTS = 'mb_products_pdf';
 const KEY_SALES = 'mb_sales_pdf';
 const KEY_TICKET = 'mb_ticket_counter_pdf';
-
-// Datos
 let products = JSON.parse(localStorage.getItem(KEY_PRODUCTS)||'[]');
 let sales = JSON.parse(localStorage.getItem(KEY_SALES)||'[]');
 let ticketCounter = parseInt(localStorage.getItem(KEY_TICKET)||'1',10);
 let cart = [];
 
-// Elementos DOM
 const productsList = document.getElementById('productsList');
 const addProductBtn = document.getElementById('addProductBtn');
 const clearProductsBtn = document.getElementById('clearProductsBtn');
@@ -198,38 +206,30 @@ const exportProductsBtn = document.getElementById('exportProductsBtn');
 const p_name = document.getElementById('p_name');
 const p_price = document.getElementById('p_price');
 const p_stock = document.getElementById('p_stock');
+
 const filterInput = document.getElementById('filterInput');
 const filterQty = document.getElementById('filterQty');
 const productsDatalist = document.getElementById('productsDatalist');
 const addFilterBtn = document.getElementById('addFilterBtn');
+
 const cartTableBody = document.querySelector('#cartTable tbody');
 const cartTotalEl = document.getElementById('cartTotal');
 const payBtn = document.getElementById('payBtn');
 const clearCartBtn = document.getElementById('clearCartBtn');
 const clientNameEl = document.getElementById('clientName');
+
 const salesList = document.getElementById('salesList');
 const salesCount = document.getElementById('salesCount');
 const salesTotal = document.getElementById('salesTotal');
 const deleteSalesBtn = document.getElementById('deleteSales');
+
 const productSelect = document.getElementById('productSelect');
 
-// Login elements
-const loginOverlay = document.getElementById('loginOverlay');
-const loginBtn = document.getElementById('loginBtn');
-const loginUser = document.getElementById('loginUser');
-const loginPass = document.getElementById('loginPass');
-
-// Top right info
-const dateTimeEl = document.getElementById('dateTime');
-
-// Guardar funciones
 function saveProducts(){ localStorage.setItem(KEY_PRODUCTS, JSON.stringify(products)); }
 function saveSales(){ localStorage.setItem(KEY_SALES, JSON.stringify(sales)); }
 function saveTicketCounter(){ localStorage.setItem(KEY_TICKET, ticketCounter.toString()); }
-
 function formatQ(v){ return 'Q'+Number(v).toFixed(2); }
 
-// Render productos
 function renderProducts(){
   productsList.innerHTML='';
   if(products.length===0){ productsList.innerHTML='<li class="center small-note">No hay productos</li>'; return;}
@@ -244,9 +244,7 @@ function renderProducts(){
     productsList.appendChild(li);
   });
   productsDatalist.innerHTML = '';
-  products.forEach(p=>{
-    const op=document.createElement('option'); op.value=p.name; productsDatalist.appendChild(op);
-  });
+  products.forEach(p=>{ const op=document.createElement('option'); op.value=p.name; productsDatalist.appendChild(op); });
   if(productSelect){
     productSelect.innerHTML = '<option value="">-- Seleccionar producto --</option>';
     products.forEach((p, idx) => {
@@ -258,32 +256,28 @@ function renderProducts(){
   }
 }
 
-// Agregar productos
 addProductBtn.onclick = ()=>{
-  const name = p_name.value.trim();
-  const price = parseFloat(p_price.value)||0;
-  const stock = parseInt(p_stock.value)||0;
+  const name = p_name.value.trim(); const price = parseFloat(p_price.value)||0; const stock = parseInt(p_stock.value)||0;
   if(!name){alert('Nombre requerido'); return;}
   products.push({name,price,stock});
   saveProducts(); renderProducts();
   p_name.value=''; p_price.value=''; p_stock.value='';
 };
 
-// Borrar productos
 clearProductsBtn.onclick = ()=>{
   const code = prompt("Ingrese código para borrar productos:");
-  if(code==='3336'){ if(confirm('Borrar todos los productos?')){ products=[]; saveProducts(); renderProducts(); } } 
-  else { alert("Código incorrecto"); }
+  if(code==='3336'){
+    if(confirm('Borrar todos los productos?')){
+      products=[]; saveProducts(); renderProducts();
+    }
+  } else { alert("Código incorrecto"); }
 }
-
-// Borrar producto individual
 function deleteProduct(idx){
   const code = prompt("Ingrese código para borrar producto:");
   if(code==='3336'){ products.splice(idx,1); saveProducts(); renderProducts(); }
-  else{ alert("Código incorrecto"); }
+  else { alert("Código incorrecto"); }
 }
 
-// Render carrito
 function renderCart(){
   cartTableBody.innerHTML='';
   if(cart.length===0){cartTableBody.innerHTML='<tr><td colspan="5" class="center small-note">Carrito vacío</td></tr>'; cartTotalEl.textContent='Q0.00'; return;}
@@ -297,88 +291,122 @@ function renderCart(){
   cartTotalEl.textContent = formatQ(total);
 }
 
-// Agregar al carrito
 function addToCart(idx, qty){
-  const prod = products[idx];
-  if(prod.stock===0){alert('Sin stock'); return;}
+  const prod = products[idx]; if(prod.stock===0){alert('Sin stock'); return;}
   const exist = cart.find(c=>c.idx===idx);
-  if(exist){ if(exist.qty+qty>prod.stock){alert('No hay suficiente stock'); return;} exist.qty+=qty; }
-  else { cart.push({idx,name:prod.name,price:prod.price,qty}); }
+  if(exist){ if(exist.qty+qty>prod.stock){alert('No hay suficiente stock'); return;} exist.qty+=qty; } 
+  else{ cart.push({idx,name:prod.name,price:prod.price,qty}); }
   renderCart();
 }
 
-// Quitar del carrito
-function removeFromCart(i){
-  cart.splice(i,1); renderCart();
-}
-
-// Cobrar venta
-payBtn.onclick = ()=>{
-  if(cart.length===0){alert('Carrito vacío'); return;}
-  let total = 0; cart.forEach(c=>{ total+=c.price*c.qty; products[c.idx].stock-=c.qty; });
-  saveProducts(); renderProducts();
-  const client = clientNameEl.value.trim()||'CLIENTE';
-  const ticketObj={id:ticketCounter++,client,total,date:new Date().toLocaleString(),items:[...cart]};
-  sales.push(ticketObj); saveSales(); saveTicketCounter();
-  alert('Venta registrada, total: '+formatQ(total));
-  renderSales(); cart=[]; renderCart();
-}
-
-// Limpiar carrito
-clearCartBtn.onclick = ()=>{cart=[]; renderCart();}
-
-// Render ventas
-function renderSales(){
-  salesList.innerHTML=''; let total=0;
-  if(sales.length===0){salesList.innerHTML='<li class="center small-note">Sin ventas</li>'; salesCount.textContent='0'; salesTotal.textContent='Q0.00'; return;}
-  sales.forEach((s,i)=>{
-    total+=s.total;
-    const li = document.createElement('li');
-    li.innerHTML=`<div><strong>${s.client}</strong> (${s.date})</div><div class="right">${formatQ(s.total)} <button onclick="deleteSale(${i})" class="danger">X</button></div>`;
-    salesList.appendChild(li);
-  });
-  salesCount.textContent = sales.length;
-  salesTotal.textContent = formatQ(total);
-}
-
-// Borrar venta
-function deleteSale(i){sales.splice(i,1); saveSales(); renderSales();}
-
-// Añadir desde búsqueda
 addFilterBtn.onclick = ()=>{
   const name = filterInput.value.trim();
   const qty = parseInt(filterQty.value)||1;
   const idx = products.findIndex(p=>p.name.toLowerCase()===name.toLowerCase());
-  if(idx===-1){alert('Producto no encontrado'); return;}
+  if(idx===-1){ alert('Producto no encontrado'); return; }
   addToCart(idx, qty);
+  filterInput.value=''; filterQty.value='1';
 }
 
-// Select cambiar
-if(productSelect){productSelect.onchange=()=>{ const idx=parseInt(productSelect.value); if(!isNaN(idx)) addToCart(idx,1); productSelect.value=''; };}
+productSelect.addEventListener('change', ()=>{
+  const idx = parseInt(productSelect.value);
+  if(!isNaN(idx)){
+    filterInput.value = products[idx].name;
+    filterQty.value = 1;
+  }
+});
 
-// Scroll botón y logo
-const scrollTopBtn = document.getElementById('scrollTopBtn');
-const logoHeader = document.querySelector('.logo-header');
-window.onscroll = ()=>{
-  scrollTopBtn.style.display = window.scrollY>300?'flex':'none';
-  if(window.scrollY>20){logoHeader.classList.add('scrolled');} else{logoHeader.classList.remove('scrolled');}
+function removeFromCart(i){ cart.splice(i,1); renderCart(); }
+clearCartBtn.onclick = ()=>{ if(confirm('Limpiar carrito?')){cart=[]; renderCart();} }
+
+payBtn.onclick = ()=>{
+  if(cart.length===0){alert('Carrito vacío'); return;}
+  const client = clientNameEl.value.trim();
+  let totalVenta=0;
+  const ventaItems = cart.map(item=>{
+    const prod = products[item.idx];
+    if(item.qty>prod.stock){alert(`Stock insuficiente: ${prod.name}`); return;}
+    prod.stock -= item.qty;
+    totalVenta+=item.qty*item.price;
+    return {...item};
+  });
+  saveProducts(); renderProducts();
+  sales.push({ticket:ticketCounter,client,items:ventaItems,total:totalVenta,date:new Date().toISOString()});
+  saveSales(); ticketCounter++; saveTicketCounter();
+  cart=[]; renderCart(); renderSales();
+  generateTicketPDF(ventaItems,totalVenta,client);
 }
-scrollTopBtn.onclick = ()=>window.scrollTo({top:0,behavior:'smooth'});
 
-// Fecha y hora
-function updateDateTime(){ dateTimeEl.textContent = new Date().toLocaleString(); }
-setInterval(updateDateTime,1000); updateDateTime();
-
-// Login
-loginBtn.onclick = ()=>{
-  const u = loginUser.value.trim(); const p = loginPass.value;
-  if(u==='ADMIN' && p==='ADMIN12345'){ loginOverlay.style.display='none'; alert('Bienvenido ADMIN'); }
-  else{ alert('Usuario o contraseña incorrecta'); }
+function renderSales(){
+  salesList.innerHTML='';
+  let tTotal=0;
+  sales.forEach(s=>{
+    tTotal+=s.total;
+    const li = document.createElement('li');
+    li.innerHTML=`<div>Ticket ${s.ticket} - ${s.client||'Cliente'} - ${formatQ(s.total)}</div>`;
+    salesList.appendChild(li);
+  });
+  salesCount.textContent = sales.length;
+  salesTotal.textContent = formatQ(tTotal);
 }
 
-// Inicial
-renderProducts();
-renderSales();
-</script>
-</body>
-</html>
+deleteSalesBtn.onclick = ()=>{
+  const code = prompt("Ingrese código para borrar ventas:");
+  if(code==='3336'){ if(confirm('Borrar todas las ventas?')){ sales=[]; saveSales(); renderSales(); } }
+  else{ alert("Código incorrecto"); }
+}
+
+exportProductsBtn.onclick = ()=>{
+  const doc = new jsPDF();
+  doc.setFontSize(14); doc.text('Inventario de productos',20,20);
+  const rows = products.map(p=>[p.name, formatQ(p.price), p.stock]);
+  doc.autoTable({head:[['Producto','Precio','Stock']], body:rows, startY:30});
+  doc.save('inventario.pdf');
+}
+
+// === FUNCION TICKET CORREGIDA PARA PRODUCTOS LARGOS ===
+function generateTicketPDF(items,total,client){
+  const doc = new jsPDF({unit:'mm', format:[80,300]});
+  let y = 8;
+  const img = new Image();
+  img.src = 'LOGO1.png';
+  img.onload = function(){
+    const imgW=40; const xCenter=80/2; const imgH = imgW*(img.height/img.width);
+    doc.addImage(img,'PNG',xCenter-imgW/2,y,imgW,imgH);
+    y+=imgH+4;
+    drawHeader();
+  }
+  img.onerror=function(){ drawHeader(); }
+
+  function drawHeader(){
+    doc.setFontSize(14); doc.setFont(undefined,'bold');
+    doc.text("MARCK BUSINESS",40,y,null,null,'center'); y+=6;
+    doc.setFontSize(9); doc.setFont(undefined,'normal');
+    doc.text(`Ticket #${ticketCounter}`,40,y,null,null,'center'); y+=6;
+    if(client) { doc.text(`Cliente: ${client}`,4,y); y+=5; }
+    doc.text(`Fecha: ${new Date().toLocaleString()}`,4,y); y+=6;
+
+    doc.setFont(undefined,'bold'); doc.text("Cant",4,y); doc.text("Producto",20,y); doc.text("Total",70,y,null,null,'right'); y+=4;
+    doc.setFont(undefined,'normal'); doc.setLineWidth(0.2); doc.line(4,y,76,y); y+=2;
+
+    items.forEach(item=>{
+      const qtyText = item.qty.toString();
+      const priceText = formatQ(item.price*item.qty);
+      const maxWidth = 46; // ancho maximo de nombre producto
+      const lines = doc.splitTextToSize(item.name,maxWidth);
+      doc.text(qtyText,4,y);
+      doc.text(lines,20,y);
+      doc.text(priceText,76,y,null,null,'right');
+      y+=lines.length*4;
+    });
+    y+=4; doc.setLineWidth(0.2); doc.line(4,y,76,y); y+=2;
+    doc.setFont(undefined,'bold'); doc.text(`TOTAL: ${formatQ(total)}`,4,y); y+=6;
+    doc.setFontSize(8); doc.setFont(undefined,'normal'); doc.text("¡Gracias por su compra!",40,y,null,null,'center');
+    doc.save(`ticket_${ticketCounter}.pdf`);
+  }
+}
+
+// Listener para animar el logo al hacer scroll (no cambia el resto del código)
+window.addEventListener('scroll', function() {
+  const header = document.querySelector('.logo-header');
+  if(window.scrollY > 50){
