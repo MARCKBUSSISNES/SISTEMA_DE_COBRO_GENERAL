@@ -86,14 +86,31 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
   border-radius:4px;
   white-space:nowrap;
 }
-.logo-header{text-align:center;margin-bottom:20px;}
-.logo-header img{max-width:250px;}
+/* Modificación para animación del logo al hacer scroll */
+.logo-header{
+  text-align:center;margin-bottom:20px;
+  transition:all 0.45s ease;
+  position:sticky;
+  top:0;
+  z-index:1000;
+  background:transparent;
+  padding:12px 0;
+}
+.logo-header img{max-width:150px;transition:all 0.45s ease;vertical-align:middle;}
+.logo-name{display:none;color:var(--green);font-weight:700;font-size:1.05rem;margin-left:10px;vertical-align:middle;transition:all 0.45s ease;}
+
+/* Estado cuando la página está scrolleada */
+.logo-header.scrolled{ text-align:left; padding:8px 20px; background:var(--dark); box-shadow:0 6px 18px rgba(0,0,0,0.5); }
+.logo-header.scrolled img{ max-width:60px; }
+.logo-header.scrolled .logo-name{ display:inline-block; }
+
 </style>
 </head>
 <body>
 
 <div class="logo-header">
   <img src="LOGO1.png" alt="Logo del sistema">
+  <span class="logo-name">MARCKBUSINESS</span>
 </div>
 
 <div class="wrap">
@@ -388,6 +405,16 @@ function generateTicketPDF(items,total,client){
     doc.save(`ticket_${ticketCounter}.pdf`);
   }
 }
+
+// Listener para animar el logo al hacer scroll (no cambia el resto del código)
+window.addEventListener('scroll', function() {
+  const header = document.querySelector('.logo-header');
+  if(window.scrollY > 50){
+    header.classList.add('scrolled');
+  } else {
+    header.classList.remove('scrolled');
+  }
+});
 
 renderProducts(); renderCart(); renderSales();
 </script>
