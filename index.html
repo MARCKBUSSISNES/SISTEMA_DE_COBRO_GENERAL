@@ -780,71 +780,95 @@ payBtn.onclick = ()=>{
 };
 
 function generateTicketPDF(items,total,client,ticketNo,method){
-  const doc = new jsPDF({unit:'mm', format:[80,300]});
-  let y = 8;
+  // 📄 Ahora es tamaño CARTA
+  const doc = new jsPDF('p', 'mm', 'letter');
+  let y = 20;
+
+  const pageWidth = 216;   // ancho carta en mm
+  const centerX = pageWidth / 2;
+  const rightX = 200;
 
   const img = new Image();
   img.src = 'LOGO1.png';
+
   img.onload = function(){
-    const imgW=40;
-    const xCenter=80/2;
-    const imgH = imgW*(img.height/img.width);
-    doc.addImage(img,'PNG',xCenter-imgW/2,y,imgW,imgH);
-    y+=imgH+4;
+    const imgW = 50;
+    const imgH = imgW * (img.height / img.width);
+    doc.addImage(img,'PNG',centerX - imgW/2,y,imgW,imgH);
+    y += imgH + 8;
     drawHeader();
   };
-  img.onerror=function(){ drawHeader(); };
+
+  img.onerror = function(){
+    drawHeader();
+  };
 
   function drawHeader(){
-    doc.setFontSize(14); doc.setFont(undefined,'bold');
-    doc.text("MARCK BUSINESS",40,y,null,null,'center'); y+=6;
-
-    doc.setFontSize(9); doc.setFont(undefined,'normal');
-    doc.text(`Ticket #${ticketNo}`,40,y,null,null,'center'); y+=5;
-
-    doc.text(`Pago: ${method}`,4,y); y+=5;
-    if(client) { doc.text(`Cliente: ${client}`,4,y); y+=5; }
-    doc.text(`Fecha: ${new Date().toLocaleString()}`,4,y); y+=6;
-
+    doc.setFontSize(16);
     doc.setFont(undefined,'bold');
-    doc.text("Cant",4,y);
-    doc.text("Producto",20,y);
-    doc.text("Total",76,y,null,null,'right');
-    y+=4;
+    doc.text("MARCK BUSINESS", centerX, y, null, null, 'center');
+    y += 8;
+
+    doc.setFontSize(11);
+    doc.setFont(undefined,'normal');
+    doc.text(`Ticket #${ticketNo}`, centerX, y, null, null, 'center');
+    y += 6;
+
+    doc.text(`Forma de pago: ${method}`, 10, y);
+    y += 5;
+
+    if(client){
+      doc.text(`Cliente: ${client}`, 10, y);
+      y += 5;
+    }
+
+    doc.text(`Fecha: ${new Date().toLocaleString()}`, 10, y);
+    y += 8;
+
+    // Encabezado de tabla
+    doc.setFont(undefined,'bold');
+    doc.text("Cant", 10, y);
+    doc.text("Producto", 30, y);
+    doc.text("Total", rightX, y, null, null, 'right');
+    y += 4;
 
     doc.setFont(undefined,'normal');
     doc.setLineWidth(0.2);
-    doc.line(4,y,76,y);
-    y+=2;
+    doc.line(10, y, rightX, y);
+    y += 3;
 
+    // Productos
     items.forEach(item=>{
       const qtyText = item.qty.toString();
-      const priceText = formatQ(item.price*item.qty);
-      const maxWidth = 46;
-      const lines = doc.splitTextToSize(item.name,maxWidth);
+      const priceText = formatQ(item.price * item.qty);
 
-      doc.text(qtyText,4,y);
-      doc.text(lines,20,y);
-      doc.text(priceText,76,y,null,null,'right');
-      y += lines.length*4;
+      const maxWidth = 120;   // más ancho porque ahora es hoja carta
+      const lines = doc.splitTextToSize(item.name, maxWidth);
+
+      doc.text(qtyText, 10, y);
+      doc.text(lines, 30, y);
+      doc.text(priceText, rightX, y, null, null, 'right');
+
+      y += lines.length * 6;
     });
 
-    y+=4;
-    doc.setLineWidth(0.2);
-    doc.line(4,y,76,y);
-    y+=2;
+    y += 4;
+    doc.line(10, y, rightX, y);
+    y += 5;
 
     doc.setFont(undefined,'bold');
-    doc.text(`TOTAL: ${formatQ(total)}`,4,y);
-    y+=6;
+    doc.setFontSize(13);
+    doc.text(`TOTAL: ${formatQ(total)}`, 10, y);
+    y += 10;
 
-    doc.setFontSize(8);
+    doc.setFontSize(10);
     doc.setFont(undefined,'normal');
-    doc.text("¡Gracias por su compra!",40,y,null,null,'center');
+    doc.text("¡Gracias por su compra!", centerX, y, null, null, 'center');
 
     doc.save(`ticket_${ticketNo}.pdf`);
   }
 }
+
 
 /* ===== CIERRE DE CAJA ===== */
 function calculateClose(){
