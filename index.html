@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MarckBusiness1</title>
+<title>MarckBusiness</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -195,7 +195,7 @@ hr{border:none;border-top:1px solid #333;margin:14px 0;}
 <div id="drawerBackdrop" class="drawer-backdrop"></div>
 <aside id="drawer" class="drawer" aria-hidden="true">
   <div class="drawer-header">
-    <div class="brand">MARCKBUSINESS</div>
+    <div class="brand">-</div>
     <button id="btnCloseMenu" class="drawer-close" title="Cerrar">✕</button>
   </div>
 
@@ -501,6 +501,7 @@ function renderProducts(){
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
           <button onclick="addToCart(${idx},1)" ${p.stock===0?'disabled':''}>Agregar</button>
+          <button onclick="editProduct(${idx})" class="ghost">Editar</button>
           <button onclick="restockProduct(${idx})" class="ghost">Stock +</button>
           <button onclick="deleteProduct(${idx})" class="danger">Eliminar</button>
         </div>
@@ -551,7 +552,40 @@ function deleteProduct(idx){
 }
 window.deleteProduct = deleteProduct;
 
-/* ===== NUEVO: AGREGAR STOCK (pide 3336) ===== */
+/* ===== NUEVO: EDITAR PRODUCTO (pide 3336) ===== */
+function editProduct(idx){
+  const code = prompt("Ingrese código para editar producto:");
+  if(code !== '3336'){
+    alert("Código incorrecto");
+    return;
+  }
+
+  const p = products[idx];
+
+  const newName = prompt("Nombre del producto:", p.name);
+  if(newName === null) return;
+  const name = newName.trim();
+  if(!name){ alert("Nombre inválido"); return; }
+
+  const newPriceStr = prompt("Precio (Q):", String(p.price));
+  if(newPriceStr === null) return;
+  const price = parseFloat(newPriceStr);
+  if(!isFinite(price) || price < 0){ alert("Precio inválido"); return; }
+
+  const newStockStr = prompt("Stock:", String(p.stock));
+  if(newStockStr === null) return;
+  const stock = parseInt(newStockStr, 10);
+  if(!Number.isFinite(stock) || stock < 0){ alert("Stock inválido"); return; }
+
+  products[idx] = { ...p, name, price, stock };
+  saveProducts();
+  renderProducts();
+
+  try{ renderCart(); }catch(e){}
+}
+window.editProduct = editProduct;
+
+/* ===== AGREGAR STOCK (pide 3336) ===== */
 function restockProduct(idx){
   const code = prompt("Ingrese código para agregar stock:");
   if(code !== '3336'){
@@ -733,7 +767,7 @@ exportDailyBtn.onclick = ()=>{
   doc.save(`ventas_${dayKey}.pdf`);
 };
 
-/* ===== COBRO + TICKET 80mm ===== */
+/* ===== COBRO + TICKET (Carta) ===== */
 payBtn.onclick = ()=>{
   if(cart.length===0){alert('Carrito vacío'); return;}
 
@@ -783,15 +817,16 @@ function generateTicketPDF(items,total,client,ticketNo,method){
   const doc = new jsPDF('p', 'mm', 'letter');
   let y = 20;
 
-  const pageWidth = 216;   
+  const pageWidth = 216;
   const centerX = pageWidth / 2;
   const rightX = 200;
+  const unitX = 160;
 
   const img = new Image();
   img.src = 'LOGO1.png';
 
   img.onload = function(){
-    const imgW = 60; // logo un poco más grande
+    const imgW = 60;
     const imgH = imgW * (img.height / img.width);
     doc.addImage(img,'PNG',centerX - imgW/2,y,imgW,imgH);
     y += imgH + 12;
@@ -804,19 +839,16 @@ function generateTicketPDF(items,total,client,ticketNo,method){
 
   function drawHeader(){
 
-    // ===== TITULO PRINCIPAL =====
-    doc.setFontSize(22);           // antes 16
+    doc.setFontSize(22);
     doc.setFont(undefined,'bold');
     doc.text("MARCK BUSINESS", centerX, y, null, null, 'center');
     y += 12;
 
-    // ===== NUMERO DE TICKET =====
-    doc.setFontSize(14);           // antes 11
+    doc.setFontSize(14);
     doc.setFont(undefined,'normal');
     doc.text(`Ticket #${ticketNo}`, centerX, y, null, null, 'center');
     y += 8;
 
-    // ===== DATOS GENERALES =====
     doc.setFontSize(12);
     doc.text(`Forma de pago: ${method}`, 10, y);
     y += 7;
@@ -829,11 +861,12 @@ function generateTicketPDF(items,total,client,ticketNo,method){
     doc.text(`Fecha: ${new Date().toLocaleString()}`, 10, y);
     y += 12;
 
-    // ===== ENCABEZADO DE TABLA =====
+    // ===== ENCABEZADO DE TABLA (AHORA CON P. UNIT) =====
     doc.setFontSize(14);
     doc.setFont(undefined,'bold');
     doc.text("Cant", 10, y);
-    doc.text("Producto", 35, y);
+    doc.text("Producto", 28, y);
+    doc.text("P.Unit", unitX, y, null, null, 'right');
     doc.text("Total", rightX, y, null, null, 'right');
     y += 6;
 
@@ -842,20 +875,22 @@ function generateTicketPDF(items,total,client,ticketNo,method){
     doc.line(10, y, rightX, y);
     y += 4;
 
-    // ===== PRODUCTOS =====
+    // ===== PRODUCTOS (AHORA CON PRECIO UNITARIO) =====
     doc.setFontSize(13);
     items.forEach(item=>{
       const qtyText = item.qty.toString();
-      const priceText = formatQ(item.price * item.qty);
+      const unitText = formatQ(item.price);
+      const totalLineText = formatQ(item.price * item.qty);
 
-      const maxWidth = 120;
+      const maxWidth = 105;
       const lines = doc.splitTextToSize(item.name, maxWidth);
 
       doc.text(qtyText, 10, y);
-      doc.text(lines, 35, y);
-      doc.text(priceText, rightX, y, null, null, 'right');
+      doc.text(lines, 28, y);
+      doc.text(unitText, unitX, y, null, null, 'right');
+      doc.text(totalLineText, rightX, y, null, null, 'right');
 
-      y += lines.length * 8;  // antes 6, ahora ocupa más espacio vertical
+      y += lines.length * 8;
     });
 
     y += 6;
@@ -863,13 +898,11 @@ function generateTicketPDF(items,total,client,ticketNo,method){
     doc.line(10, y, rightX, y);
     y += 8;
 
-    // ===== TOTAL =====
-    doc.setFontSize(18);           // antes 13
+    doc.setFontSize(18);
     doc.setFont(undefined,'bold');
     doc.text(`TOTAL: ${formatQ(total)}`, 10, y);
     y += 14;
 
-    // ===== MENSAJE FINAL =====
     doc.setFontSize(12);
     doc.setFont(undefined,'normal');
     doc.text("¡Gracias por su compra!", centerX, y, null, null, 'center');
@@ -878,6 +911,42 @@ function generateTicketPDF(items,total,client,ticketNo,method){
   }
 }
 
+/* ===== CIERRE DE CAJA ===== */
+function calculateClose(){
+  const dayKey = salesDateEl.value || todayKey();
+  const counted = {
+    EFECTIVO: safeNumber(closeCashEl.value),
+    TARJETA: safeNumber(closeCardEl.value),
+    TRANSFERENCIA: safeNumber(closeTransferEl.value)
+  };
+  const expected = computeDayTotals(dayKey).byMethod;
+
+  const diff = {
+    EFECTIVO: counted.EFECTIVO - safeNumber(expected.EFECTIVO),
+    TARJETA: counted.TARJETA - safeNumber(expected.TARJETA),
+    TRANSFERENCIA: counted.TRANSFERENCIA - safeNumber(expected.TRANSFERENCIA)
+  };
+
+  const totalExpected = safeNumber(expected.EFECTIVO)+safeNumber(expected.TARJETA)+safeNumber(expected.TRANSFERENCIA);
+  const totalCounted = counted.EFECTIVO+counted.TARJETA+counted.TRANSFERENCIA;
+  const totalDiff = totalCounted - totalExpected;
+
+  return { dayKey, counted, expected, diff, totalExpected, totalCounted, totalDiff, note: (closeNoteEl.value||'').trim() };
+}
+
+function renderCloseResult(){
+  const r = calculateClose();
+  const sign = (n)=> n>0 ? `+${formatQ(n)}` : formatQ(n);
+
+  closeResultEl.innerHTML = `
+    <div><strong>Esperado:</strong> ${formatQ(r.totalExpected)} | <strong>Contado:</strong> ${formatQ(r.totalCounted)} | <strong>Diferencia:</strong> ${sign(r.totalDiff)}</div>
+    <div style="margin-top:6px;">
+      <span class="pill">EFECTIVO ${sign(r.diff.EFECTIVO)}</span>
+      <span class="pill">TARJETA ${sign(r.diff.TARJETA)}</span>
+      <span class="pill">TRANSFERENCIA ${sign(r.diff.TRANSFERENCIA)}</span>
+    </div>
+  `;
+}
 
 calcCloseBtn.onclick = renderCloseResult;
 
@@ -954,7 +1023,7 @@ function generateCloseTicketPDF(r){
 
     y+=2;
     doc.setFontSize(8);
-    doc.text("MarckBusiness — Cierre de caja",40,y,null,null,'center');
+    doc.text("Cierre de caja",40,y,null,null,'center');
 
     doc.save(`cierre_${r.dayKey}.pdf`);
   }
