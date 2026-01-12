@@ -780,11 +780,10 @@ payBtn.onclick = ()=>{
 };
 
 function generateTicketPDF(items,total,client,ticketNo,method){
-  // 📄 Ahora es tamaño CARTA
   const doc = new jsPDF('p', 'mm', 'letter');
   let y = 20;
 
-  const pageWidth = 216;   // ancho carta en mm
+  const pageWidth = 216;   
   const centerX = pageWidth / 2;
   const rightX = 200;
 
@@ -792,10 +791,10 @@ function generateTicketPDF(items,total,client,ticketNo,method){
   img.src = 'LOGO1.png';
 
   img.onload = function(){
-    const imgW = 50;
+    const imgW = 60; // logo un poco más grande
     const imgH = imgW * (img.height / img.width);
     doc.addImage(img,'PNG',centerX - imgW/2,y,imgW,imgH);
-    y += imgH + 8;
+    y += imgH + 12;
     drawHeader();
   };
 
@@ -804,64 +803,74 @@ function generateTicketPDF(items,total,client,ticketNo,method){
   };
 
   function drawHeader(){
-    doc.setFontSize(16);
+
+    // ===== TITULO PRINCIPAL =====
+    doc.setFontSize(22);           // antes 16
     doc.setFont(undefined,'bold');
     doc.text("MARCK BUSINESS", centerX, y, null, null, 'center');
-    y += 8;
+    y += 12;
 
-    doc.setFontSize(11);
+    // ===== NUMERO DE TICKET =====
+    doc.setFontSize(14);           // antes 11
     doc.setFont(undefined,'normal');
     doc.text(`Ticket #${ticketNo}`, centerX, y, null, null, 'center');
-    y += 6;
+    y += 8;
 
+    // ===== DATOS GENERALES =====
+    doc.setFontSize(12);
     doc.text(`Forma de pago: ${method}`, 10, y);
-    y += 5;
+    y += 7;
 
     if(client){
       doc.text(`Cliente: ${client}`, 10, y);
-      y += 5;
+      y += 7;
     }
 
     doc.text(`Fecha: ${new Date().toLocaleString()}`, 10, y);
-    y += 8;
+    y += 12;
 
-    // Encabezado de tabla
+    // ===== ENCABEZADO DE TABLA =====
+    doc.setFontSize(14);
     doc.setFont(undefined,'bold');
     doc.text("Cant", 10, y);
-    doc.text("Producto", 30, y);
+    doc.text("Producto", 35, y);
     doc.text("Total", rightX, y, null, null, 'right');
-    y += 4;
+    y += 6;
 
     doc.setFont(undefined,'normal');
-    doc.setLineWidth(0.2);
+    doc.setLineWidth(0.3);
     doc.line(10, y, rightX, y);
-    y += 3;
+    y += 4;
 
-    // Productos
+    // ===== PRODUCTOS =====
+    doc.setFontSize(13);
     items.forEach(item=>{
       const qtyText = item.qty.toString();
       const priceText = formatQ(item.price * item.qty);
 
-      const maxWidth = 120;   // más ancho porque ahora es hoja carta
+      const maxWidth = 120;
       const lines = doc.splitTextToSize(item.name, maxWidth);
 
       doc.text(qtyText, 10, y);
-      doc.text(lines, 30, y);
+      doc.text(lines, 35, y);
       doc.text(priceText, rightX, y, null, null, 'right');
 
-      y += lines.length * 6;
+      y += lines.length * 8;  // antes 6, ahora ocupa más espacio vertical
     });
 
-    y += 4;
+    y += 6;
+    doc.setLineWidth(0.3);
     doc.line(10, y, rightX, y);
-    y += 5;
+    y += 8;
 
+    // ===== TOTAL =====
+    doc.setFontSize(18);           // antes 13
     doc.setFont(undefined,'bold');
-    doc.setFontSize(13);
     doc.text(`TOTAL: ${formatQ(total)}`, 10, y);
-    y += 10;
+    y += 14;
 
-    doc.setFontSize(10);
+    // ===== MENSAJE FINAL =====
+    doc.setFontSize(12);
     doc.setFont(undefined,'normal');
     doc.text("¡Gracias por su compra!", centerX, y, null, null, 'center');
 
@@ -869,43 +878,6 @@ function generateTicketPDF(items,total,client,ticketNo,method){
   }
 }
 
-
-/* ===== CIERRE DE CAJA ===== */
-function calculateClose(){
-  const dayKey = salesDateEl.value || todayKey();
-  const counted = {
-    EFECTIVO: safeNumber(closeCashEl.value),
-    TARJETA: safeNumber(closeCardEl.value),
-    TRANSFERENCIA: safeNumber(closeTransferEl.value)
-  };
-  const expected = computeDayTotals(dayKey).byMethod;
-
-  const diff = {
-    EFECTIVO: counted.EFECTIVO - safeNumber(expected.EFECTIVO),
-    TARJETA: counted.TARJETA - safeNumber(expected.TARJETA),
-    TRANSFERENCIA: counted.TRANSFERENCIA - safeNumber(expected.TRANSFERENCIA)
-  };
-
-  const totalExpected = safeNumber(expected.EFECTIVO)+safeNumber(expected.TARJETA)+safeNumber(expected.TRANSFERENCIA);
-  const totalCounted = counted.EFECTIVO+counted.TARJETA+counted.TRANSFERENCIA;
-  const totalDiff = totalCounted - totalExpected;
-
-  return { dayKey, counted, expected, diff, totalExpected, totalCounted, totalDiff, note: (closeNoteEl.value||'').trim() };
-}
-
-function renderCloseResult(){
-  const r = calculateClose();
-  const sign = (n)=> n>0 ? `+${formatQ(n)}` : formatQ(n);
-
-  closeResultEl.innerHTML = `
-    <div><strong>Esperado:</strong> ${formatQ(r.totalExpected)} | <strong>Contado:</strong> ${formatQ(r.totalCounted)} | <strong>Diferencia:</strong> ${sign(r.totalDiff)}</div>
-    <div style="margin-top:6px;">
-      <span class="pill">EFECTIVO ${sign(r.diff.EFECTIVO)}</span>
-      <span class="pill">TARJETA ${sign(r.diff.TARJETA)}</span>
-      <span class="pill">TRANSFERENCIA ${sign(r.diff.TRANSFERENCIA)}</span>
-    </div>
-  `;
-}
 
 calcCloseBtn.onclick = renderCloseResult;
 
