@@ -3,29 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sistema de Cobro - MarckBusiness</title>
+<title>MarckBusiness</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
 <style>
 :root{
   --green:#25D366; --dark:#121212; --dark-card:#1E1E1E; --light:#f4f4f4; --accent:#03dac6;
 }
 body{
   font-family:'Roboto Mono', monospace;
-  background:var(--dark); color:var(--light); margin:0;padding:20px;
+  background:var(--dark); color:var(--light); margin:0; padding:20px;
 }
 h2,h3{margin:0 0 10px 0;color:var(--green);}
-.wrap{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:20px;
-  max-width:1400px;
-  margin:auto;
-  align-items:start;
-}
-@media (max-width: 1000px){.wrap{ grid-template-columns:1fr 1fr; }}
-@media (max-width: 700px){.wrap{ grid-template-columns:1fr; }}
 .card{
   background:var(--dark-card);
   border-radius:16px;
@@ -43,15 +35,15 @@ button{
   border-radius:12px; cursor:pointer; font-weight:700; transition:0.3s;
 }
 button:hover{background:var(--accent);}
+button:disabled{opacity:.55; cursor:not-allowed;}
 .danger{background:#e74c3c;}
 .danger:hover{background:#ff5252;}
 .ghost{background:#333;color:#fff;}
 .ghost:hover{background:#555;}
-ul.list{list-style:none;padding:0;margin:0;max-height:250px;overflow:auto;}
-ul.list li{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #333;border-radius:8px;margin-bottom:6px;}
-ul.list li.highlight{background:#25D36633;}
+ul.list{list-style:none;padding:0;margin:0;max-height:320px;overflow:auto;}
+ul.list li{display:flex;justify-content:space-between;gap:10px;padding:10px;border-bottom:1px solid #333;border-radius:8px;margin-bottom:6px;}
 table{width:100%;border-collapse:collapse;margin-top:10px;}
-table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
+table th, table td{padding:10px;text-align:left;border-bottom:1px solid #333;}
 .right{text-align:right;}
 .center{text-align:center;}
 .small-note{font-size:0.8rem;color:#888;}
@@ -60,125 +52,277 @@ table th, table td{Padding:10px;text-align:left;border-bottom:1px solid #333;}
 .big-input{font-size:1.3rem;padding:14px;}
 .big-button{font-size:1.2rem;padding:14px 18px;}
 .sub-card{background:#1A1A1A;border-radius:12px;padding:12px;margin-top:12px;}
+hr{border:none;border-top:1px solid #333;margin:14px 0;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:700px){.grid2{grid-template-columns:1fr;}}
 .add-cart-btn{
   background:#25D366;
   border-radius:12px;
   font-size:1.6rem;
-  width:60px;
-  height:60px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:700;
-  cursor:pointer;
-  transition:0.3s;
-  position:relative;
+  width:60px;height:60px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;cursor:pointer;transition:0.3s;position:relative;
 }
 .add-cart-btn:hover{background:#03dac6;}
 .add-cart-btn:hover::after{
-  content: 'Agregar al carrito';
-  position:absolute;
-  top:-30px;
-  background:#333;
-  color:#fff;
-  padding:4px 8px;
-  font-size:0.8rem;
-  border-radius:4px;
-  white-space:nowrap;
+  content:'Agregar al carrito';
+  position:absolute;top:-30px;
+  background:#333;color:#fff;padding:4px 8px;
+  font-size:0.8rem;border-radius:4px;white-space:nowrap;
 }
-.logo-header{
-  text-align:center;
-  margin-bottom:20px;
-  position:sticky;
-  top:0;
-  z-index:1000;
-  background:var(--dark);
-  padding:12px 0;
-}
-.logo-header img{max-width:150px; vertical-align:middle;}
-.logo-name{display:inline-block;color:var(--green);font-weight:700;font-size:1.05rem;margin-left:10px;vertical-align:middle;}
-hr{border:none;border-top:1px solid #333;margin:14px 0;}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-@media (max-width:700px){.grid2{grid-template-columns:1fr;}}
 .pill{
   display:inline-block;
   padding:2px 8px;
   border:1px solid #333;
   border-radius:999px;
-  font-size:0.75rem;
-  color:#ddd;
+  font-size:0.75rem;color:#ddd;
+}
+
+/* HEADER */
+.logo-header{
+  text-align:center;
+  margin-bottom:16px;
+  position:sticky;top:0;z-index:1000;
+  background:var(--dark);
+  padding:12px 0;
+}
+.logo-header img{max-width:150px; vertical-align:middle;}
+.logo-name{
+  display:inline-block;color:var(--green);font-weight:700;
+  font-size:1.05rem;margin-left:10px;vertical-align:middle;
+}
+
+/* ===== MENU HAMBURGUESA ===== */
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  max-width:1400px;
+  margin:0 auto 14px auto;
+}
+.topbar-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.hamburger{
+  width:44px; height:44px;
+  border-radius:12px;
+  background:#333;
+  color:#fff;
+  border:1px solid #444;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+.hamburger:hover{background:#555;}
+.view-title{
+  font-weight:800;color:var(--green);letter-spacing:.3px;
+}
+.shell{max-width:1400px;margin:0 auto;position:relative;}
+.drawer-backdrop{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.55);
+  opacity:0;pointer-events:none;
+  transition:.2s;
+  z-index:2000;
+}
+.drawer{
+  position:fixed;top:0;left:0;
+  height:100%;width:320px;
+  background:var(--dark-card);
+  border-right:1px solid #333;
+  transform:translateX(-105%);
+  transition:.2s;
+  z-index:2001;
+  padding:16px;
+  box-shadow:0 20px 60px rgba(0,0,0,.7);
+}
+.drawer.open{transform:translateX(0);}
+.drawer-backdrop.open{opacity:1;pointer-events:auto;}
+.drawer-header{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin-bottom:12px;
+}
+.drawer-header .brand{color:var(--green);font-weight:800;}
+.drawer-close{
+  width:40px;height:40px;border-radius:12px;
+  background:#333;color:#fff;border:1px solid #444;
+}
+.drawer-close:hover{background:#555;}
+.drawer-nav{display:flex;flex-direction:column;gap:10px;margin-top:10px;}
+.navbtn{
+  text-align:left;
+  background:#1A1A1A;
+  border:1px solid #333;
+  color:#fff;
+  padding:12px 12px;
+  border-radius:14px;
+  cursor:pointer;
+  font-weight:700;
+}
+.navbtn:hover{background:#222;}
+.navbtn.active{
+  background:#25D36622;
+  border-color:#25D36666;
+}
+.drawer-note{margin-top:14px;color:#aaa;font-size:.8rem;}
+
+.view{display:none;}
+.view.active{display:block;}
+
+.footer{
+  text-align:center;margin-top:20px;font-size:0.8rem;color:#888;
 }
 </style>
 </head>
+
 <body>
 
 <div class="logo-header">
   <img src="LOGO1.png" alt="Logo del sistema">
-  <span class="logo-name">MARCKBUSINESS (version de prueba 5 dias)</span>
+  <span class="logo-name">Construcciones Globales</span>
 </div>
 
-<div class="wrap">
-  <!-- Columna izquierda: agregar productos -->
-  <div class="card">
-    <h2>Agregar producto</h2>
-    <label>Nombre</label><input id="p_name" type="text" placeholder="Ej: Polo blanco"/>
-    <label>Precio (Q)</label><input id="p_price" type="number" min="0" step="0.01"/>
-    <label>Stock</label><input id="p_stock" type="number" min="0" step="1"/>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-      <button id="addProductBtn" class="big-button">Agregar producto</button>
-      <button id="clearProductsBtn" class="danger">Borrar todo</button>
-      <button id="exportProductsBtn" class="ghost">Descargar inventario PDF</button>
-    </div>
-    <hr/>
-    <h3>Productos disponibles</h3>
-    <ul id="productsList" class="list"></ul>
+<div class="topbar">
+  <div class="topbar-left">
+    <button id="btnOpenMenu" class="hamburger" title="Menú">☰</button>
+    <div class="view-title" id="viewTitle">VENTA / CARRITO</div>
+  </div>
+  <div class="small-note">Soporte Tecnico +502 5814-0621.</div>
+</div>
+
+<div id="drawerBackdrop" class="drawer-backdrop"></div>
+<aside id="drawer" class="drawer" aria-hidden="true">
+  <div class="drawer-header">
+    <div class="brand">MARCKBUSINESS</div>
+    <button id="btnCloseMenu" class="drawer-close" title="Cerrar">✕</button>
   </div>
 
-  <!-- Columna central: búsqueda + ventas + cierre -->
-  <div class="card">
-    <div class="sub-card">
-      <h2>Buscar producto</h2>
-      <div class="flex-row">
-        <input id="filterInput" type="text" placeholder="Buscar producto..." list="productsDatalist" class="big-input"/>
-        <input id="filterQty" type="number" min="1" value="1" style="width:100px;" placeholder="Cant"/>
-        <button id="addFilterBtn" class="add-cart-btn">+</button>
-        <datalist id="productsDatalist"></datalist>
+  <div class="drawer-nav">
+    <button class="navbtn active" data-view="venta">🧾 Venta / Carrito</button>
+    <button class="navbtn" data-view="inventario">📦 Inventario</button>
+    <button class="navbtn" data-view="registro">📊 Registro + Cierre</button>
+  </div>
+
+  <div class="drawer-note">
+    MarckBusiness © 2026 — Todos los derechos reservados
+  </div>
+</aside>
+
+<div class="shell">
+
+  <!-- ===================== VIEW: VENTA ===================== -->
+  <section id="view-venta" class="view active">
+    <div class="card">
+
+      <div class="sub-card">
+        <h2>Buscar producto</h2>
+        <div class="flex-row">
+          <input id="filterInput" type="text" placeholder="Buscar producto..." list="productsDatalist" class="big-input"/>
+          <input id="filterQty" type="number" min="1" value="1" style="width:100px;" placeholder="Cant"/>
+          <button id="addFilterBtn" class="add-cart-btn">+</button>
+          <datalist id="productsDatalist"></datalist>
+        </div>
+
+        <div style="margin-top:8px;">
+          <label class="small-note">O seleccionar desde la lista:</label>
+          <select id="productSelect">
+            <option value="">-- Seleccionar producto --</option>
+          </select>
+        </div>
+        <p class="small-note">Selecciona producto y cantidad para agregar al carrito.</p>
       </div>
 
-      <div style="margin-top:8px;">
-        <label class="small-note">O seleccionar desde la lista:</label>
-        <select id="productSelect">
-          <option value="">-- Seleccionar producto --</option>
-        </select>
+      <div class="sub-card">
+        <h2>Carrito / Venta</h2>
+
+        <table id="cartTable">
+          <thead>
+            <tr>
+              <th>Cant</th><th>Producto</th><th class="right">Precio</th><th class="right">Total</th><th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:10px;flex-wrap:wrap;">
+          <input id="clientName" placeholder="Cliente (opcional)" style="flex:1;min-width:220px;"/>
+
+          <div style="min-width:220px;flex:1;">
+            <label>Forma de pago</label>
+            <select id="payMethod">
+              <option value="EFECTIVO">EFECTIVO</option>
+              <option value="TARJETA">TARJETA</option>
+              <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+            </select>
+          </div>
+
+          <div class="right" style="min-width:160px;">
+            <div class="small-note">Total</div>
+            <div id="cartTotal" style="font-size:1.4rem;font-weight:700">Q0.00</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <button id="payBtn">Cobrar</button>
+          <button id="clearCartBtn" class="ghost">Limpiar</button>
+        </div>
+
+        <div class="small-note">Ticket 80mm imprimible.</div>
       </div>
-      <p class="small-note">Selecciona producto y cantidad para agregar al carrito.</p>
+
     </div>
+  </section>
 
-    <div class="sub-card">
-      <div class="grid2" style="align-items:end;">
-        <div>
-          <h2>Registro diario</h2>
-          <label>Fecha</label>
-          <input id="salesDate" type="date"/>
-          <div class="small-note">Visualiza ventas por día (se guardan todas en el sistema).</div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-          <button id="exportDailyBtn" class="ghost">Descargar ventas del día (PDF)</button>
-          <button id="deleteSales" class="danger">Borrar ventas</button>
-        </div>
+  <!-- ===================== VIEW: INVENTARIO ===================== -->
+  <section id="view-inventario" class="view">
+    <div class="card">
+      <h2>Agregar producto</h2>
+      <label>Nombre</label><input id="p_name" type="text" placeholder="Ej: Polo blanco"/>
+      <label>Precio (Q)</label><input id="p_price" type="number" min="0" step="0.01"/>
+      <label>Stock</label><input id="p_stock" type="number" min="0" step="1"/>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <button id="addProductBtn" class="big-button">Agregar producto</button>
+        <button id="clearProductsBtn" class="danger">Borrar todo</button>
+        <button id="exportProductsBtn" class="ghost">Descargar inventario PDF</button>
       </div>
-
       <hr/>
+      <h3>Productos disponibles</h3>
+      <ul id="productsList" class="list"></ul>
+    </div>
+  </section>
 
-      <h3>Ventas del día</h3>
-      <ul id="salesList" class="list"></ul>
+  <!-- ===================== VIEW: REGISTRO + CIERRE ===================== -->
+  <section id="view-registro" class="view">
+    <div class="card">
 
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-        <div><div class="small-note">Ventas</div><div id="salesCount">0</div></div>
-        <div class="right"><div class="small-note">Total</div><div id="salesTotal">Q0.00</div></div>
+      <div class="sub-card">
+        <div class="grid2" style="align-items:end;">
+          <div>
+            <h2>Registro diario</h2>
+            <label>Fecha</label>
+            <input id="salesDate" type="date"/>
+            <div class="small-note">Visualiza ventas por día.</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+            <button id="exportDailyBtn" class="ghost">Descargar ventas del día (PDF)</button>
+            <button id="deleteSales" class="danger">Borrar ventas</button>
+          </div>
+        </div>
+
+        <hr/>
+
+        <h3>Ventas del día</h3>
+        <ul id="salesList" class="list"></ul>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+          <div><div class="small-note">Ventas</div><div id="salesCount">0</div></div>
+          <div class="right"><div class="small-note">Total</div><div id="salesTotal">Q0.00</div></div>
+        </div>
       </div>
 
-      <div class="sub-card" style="margin-top:12px;">
+      <div class="sub-card">
         <h2>Cierre de caja</h2>
         <div class="small-note">Ingresa lo contado por forma de pago para cuadre vs ventas del día.</div>
 
@@ -210,53 +354,72 @@ hr{border:none;border-top:1px solid #333;margin:14px 0;}
 
         <div id="closeResult" style="margin-top:10px;" class="small-note"></div>
       </div>
+
     </div>
-  </div>
+  </section>
 
-  <!-- Columna derecha: carrito -->
-  <div class="card">
-    <h2>Carrito / Venta</h2>
-
-    <table id="cartTable">
-      <thead>
-        <tr>
-          <th>Cant</th><th>Producto</th><th class="right">Precio</th><th class="right">Total</th><th></th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:10px;flex-wrap:wrap;">
-      <input id="clientName" placeholder="Cliente (opcional)" style="flex:1;min-width:220px;"/>
-
-      <div style="min-width:220px;flex:1;">
-        <label>Forma de pago</label>
-        <select id="payMethod">
-          <option value="EFECTIVO">EFECTIVO</option>
-          <option value="TARJETA">TARJETA</option>
-          <option value="TRANSFERENCIA">TRANSFERENCIA</option>
-        </select>
-      </div>
-
-      <div class="right" style="min-width:160px;">
-        <div class="small-note">Total</div>
-        <div id="cartTotal" style="font-size:1.4rem;font-weight:700">Q0.00</div>
-      </div>
-    </div>
-
-    <div style="display:flex;gap:8px;margin-top:12px;">
-      <button id="payBtn">Cobrar</button>
-      <button id="clearCartBtn" class="ghost">Limpiar</button>
-    </div>
-    <div class="small-note">Ticket 80mm imprimible.</div>
-  </div>
-</div>
-
-<div style="text-align:center;margin-top:20px;font-size:0.8rem;color:#888">
-  MarckBusiness © 2025 — Todos los derechos reservados
+  <div class="footer">MarckBusiness © 2026 — Todos los derechos reservados</div>
 </div>
 
 <script>
+/* ==========================
+   MENU HAMBURGUESA
+========================== */
+const btnOpenMenu = document.getElementById('btnOpenMenu');
+const btnCloseMenu = document.getElementById('btnCloseMenu');
+const drawer = document.getElementById('drawer');
+const backdrop = document.getElementById('drawerBackdrop');
+const navBtns = Array.from(document.querySelectorAll('.navbtn'));
+const viewTitle = document.getElementById('viewTitle');
+
+const views = {
+  venta: document.getElementById('view-venta'),
+  inventario: document.getElementById('view-inventario'),
+  registro: document.getElementById('view-registro'),
+};
+const titleMap = {
+  venta:'VENTA / CARRITO',
+  inventario:'INVENTARIO',
+  registro:'REGISTRO + CIERRE'
+};
+
+function openMenu(){
+  drawer.classList.add('open');
+  backdrop.classList.add('open');
+  drawer.setAttribute('aria-hidden','false');
+}
+function closeMenu(){
+  drawer.classList.remove('open');
+  backdrop.classList.remove('open');
+  drawer.setAttribute('aria-hidden','true');
+}
+btnOpenMenu.onclick = openMenu;
+btnCloseMenu.onclick = closeMenu;
+backdrop.onclick = closeMenu;
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeMenu(); });
+
+function switchView(key){
+  Object.keys(views).forEach(k=>views[k].classList.remove('active'));
+  views[key].classList.add('active');
+
+  navBtns.forEach(b=>b.classList.toggle('active', b.dataset.view===key));
+  viewTitle.textContent = titleMap[key] || 'MÓDULO';
+
+  try{ renderProducts(); }catch(e){}
+  try{ renderCart(); }catch(e){}
+  try{ renderSales(); }catch(e){}
+  try{ renderCloseResult(); }catch(e){}
+}
+navBtns.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    switchView(btn.dataset.view);
+    closeMenu();
+  });
+});
+
+/* ==========================
+   APP
+========================== */
 const { jsPDF } = window.jspdf;
 
 const KEY_PRODUCTS = 'mb_products_pdf';
@@ -268,6 +431,7 @@ let sales = JSON.parse(localStorage.getItem(KEY_SALES)||'[]');
 let ticketCounter = parseInt(localStorage.getItem(KEY_TICKET)||'1',10);
 let cart = [];
 
+/* INVENTARIO */
 const productsList = document.getElementById('productsList');
 const addProductBtn = document.getElementById('addProductBtn');
 const clearProductsBtn = document.getElementById('clearProductsBtn');
@@ -276,29 +440,30 @@ const p_name = document.getElementById('p_name');
 const p_price = document.getElementById('p_price');
 const p_stock = document.getElementById('p_stock');
 
+/* BUSCAR PRODUCTO */
 const filterInput = document.getElementById('filterInput');
 const filterQty = document.getElementById('filterQty');
 const productsDatalist = document.getElementById('productsDatalist');
 const addFilterBtn = document.getElementById('addFilterBtn');
+const productSelect = document.getElementById('productSelect');
 
+/* CARRITO */
 const cartTableBody = document.querySelector('#cartTable tbody');
 const cartTotalEl = document.getElementById('cartTotal');
 const payBtn = document.getElementById('payBtn');
 const clearCartBtn = document.getElementById('clearCartBtn');
 const clientNameEl = document.getElementById('clientName');
-
 const payMethodEl = document.getElementById('payMethod');
 
+/* REGISTRO */
 const salesList = document.getElementById('salesList');
 const salesCount = document.getElementById('salesCount');
 const salesTotal = document.getElementById('salesTotal');
 const deleteSalesBtn = document.getElementById('deleteSales');
 const exportDailyBtn = document.getElementById('exportDailyBtn');
-
-const productSelect = document.getElementById('productSelect');
-
 const salesDateEl = document.getElementById('salesDate');
 
+/* CIERRE */
 const closeCashEl = document.getElementById('closeCash');
 const closeCardEl = document.getElementById('closeCard');
 const closeTransferEl = document.getElementById('closeTransfer');
@@ -310,10 +475,8 @@ const closeResultEl = document.getElementById('closeResult');
 function saveProducts(){ localStorage.setItem(KEY_PRODUCTS, JSON.stringify(products)); }
 function saveSales(){ localStorage.setItem(KEY_SALES, JSON.stringify(sales)); }
 function saveTicketCounter(){ localStorage.setItem(KEY_TICKET, ticketCounter.toString()); }
-
 function formatQ(v){ return 'Q'+Number(v).toFixed(2); }
 
-// ======== UTILIDADES FECHA (REGISTRO DIARIO) =========
 function pad2(n){ return String(n).padStart(2,'0'); }
 function dateKeyFromDate(d){
   const dt = new Date(d);
@@ -322,37 +485,44 @@ function dateKeyFromDate(d){
 function todayKey(){ return dateKeyFromDate(new Date()); }
 function safeNumber(x){ const n = Number(x); return isFinite(n) ? n : 0; }
 
-// ======== PRODUCTOS =========
+/* ===== PRODUCTOS ===== */
 function renderProducts(){
   productsList.innerHTML='';
-  if(products.length===0){ productsList.innerHTML='<li class="center small-note">No hay productos</li>'; return;}
-  products.forEach((p,idx)=>{
-    const li = document.createElement('li');
-    const stockClass = (p.stock===0?'small-note':'');
-    li.innerHTML=`<div><strong>${p.name}</strong> <span class="${stockClass}">(${p.stock})</span><br><span class="small-note">${formatQ(p.price)}</span></div>
-    <div style="display:flex;gap:6px">
-      <button onclick="addToCart(${idx},1)" ${p.stock===0?'disabled':''}>Agregar</button>
-      <button onclick="deleteProduct(${idx})" class="danger">Eliminar</button>
-    </div>`;
-    productsList.appendChild(li);
-  });
+  if(products.length===0){
+    productsList.innerHTML='<li class="center small-note">No hay productos</li>';
+  } else {
+    products.forEach((p,idx)=>{
+      const li = document.createElement('li');
+      const stockClass = (p.stock===0?'small-note':'');
+      li.innerHTML=`
+        <div>
+          <strong>${p.name}</strong> <span class="${stockClass}">(${p.stock})</span><br>
+          <span class="small-note">${formatQ(p.price)}</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+          <button onclick="addToCart(${idx},1)" ${p.stock===0?'disabled':''}>Agregar</button>
+          <button onclick="restockProduct(${idx})" class="ghost">Stock +</button>
+          <button onclick="deleteProduct(${idx})" class="danger">Eliminar</button>
+        </div>
+      `;
+      productsList.appendChild(li);
+    });
+  }
 
-  productsDatalist.innerHTML = '';
+  productsDatalist.innerHTML='';
   products.forEach(p=>{
     const op=document.createElement('option');
     op.value=p.name;
     productsDatalist.appendChild(op);
   });
 
-  if(productSelect){
-    productSelect.innerHTML = '<option value="">-- Seleccionar producto --</option>';
-    products.forEach((p, idx) => {
-      const o = document.createElement('option');
-      o.value = idx;
-      o.textContent = p.name + (p.stock !== undefined ? ` (${p.stock})` : '');
-      productSelect.appendChild(o);
-    });
-  }
+  productSelect.innerHTML = '<option value="">-- Seleccionar producto --</option>';
+  products.forEach((p, idx) => {
+    const o = document.createElement('option');
+    o.value = idx;
+    o.textContent = p.name + (p.stock !== undefined ? ` (${p.stock})` : '');
+    productSelect.appendChild(o);
+  });
 }
 
 addProductBtn.onclick = ()=>{
@@ -376,13 +546,31 @@ clearProductsBtn.onclick = ()=>{
 
 function deleteProduct(idx){
   const code = prompt("Ingrese código para borrar producto:");
-  if(code==='3336'){
-    products.splice(idx,1);
-    saveProducts(); renderProducts();
-  } else { alert("Código incorrecto"); }
+  if(code==='3336'){ products.splice(idx,1); saveProducts(); renderProducts(); }
+  else { alert("Código incorrecto"); }
 }
+window.deleteProduct = deleteProduct;
 
-// ======== CARRITO =========
+/* ===== NUEVO: AGREGAR STOCK (pide 3336) ===== */
+function restockProduct(idx){
+  const code = prompt("Ingrese código para agregar stock:");
+  if(code !== '3336'){
+    alert("Código incorrecto");
+    return;
+  }
+  const qty = parseInt(prompt("¿Cuánto stock desea agregar? (Ej: 10)"), 10);
+  if(!Number.isFinite(qty) || qty <= 0){
+    alert("Cantidad inválida");
+    return;
+  }
+  products[idx].stock = (parseInt(products[idx].stock,10) || 0) + qty;
+  saveProducts();
+  renderProducts();
+  alert(`Stock actualizado: ${products[idx].name} = ${products[idx].stock}`);
+}
+window.restockProduct = restockProduct;
+
+/* ===== CARRITO ===== */
 function renderCart(){
   cartTableBody.innerHTML='';
   if(cart.length===0){
@@ -413,12 +601,13 @@ function addToCart(idx, qty){
   const exist = cart.find(c=>c.idx===idx);
   if(exist){
     if(exist.qty+qty>prod.stock){alert('No hay suficiente stock'); return;}
-    exist.qty+=qty;
-  } else {
+    exist.qty += qty;
+  }else{
     cart.push({idx,name:prod.name,price:prod.price,qty});
   }
   renderCart();
 }
+window.addToCart = addToCart;
 
 addFilterBtn.onclick = ()=>{
   const name = filterInput.value.trim();
@@ -438,9 +627,11 @@ productSelect.addEventListener('change', ()=>{
 });
 
 function removeFromCart(i){ cart.splice(i,1); renderCart(); }
-clearCartBtn.onclick = ()=>{ if(confirm('Limpiar carrito?')){cart=[]; renderCart();} }
+window.removeFromCart = removeFromCart;
 
-// ======== VENTAS / REGISTRO DIARIO =========
+clearCartBtn.onclick = ()=>{ if(confirm('Limpiar carrito?')){ cart=[]; renderCart(); } };
+
+/* ===== REGISTRO DIARIO ===== */
 function salesOfDay(dayKey){
   return sales.filter(s => (s.dayKey || dateKeyFromDate(s.date)) === dayKey);
 }
@@ -481,32 +672,31 @@ function renderSales(){
       salesList.appendChild(li);
     });
   }
+
   salesCount.textContent = count;
   salesTotal.textContent = formatQ(total);
 }
 
-// selector fecha por defecto hoy
 (function initDate(){
-  const t = todayKey();
-  salesDateEl.value = t;
+  salesDateEl.value = todayKey();
 })();
-salesDateEl.addEventListener('change', renderSales);
 
-// Borrar ventas (manteniendo tu código + seguridad)
+salesDateEl.addEventListener('change', ()=>{
+  renderSales();
+  renderCloseResult();
+});
+
+/* Borrar ventas */
 deleteSalesBtn.onclick = ()=>{
   const code = prompt("Ingrese código para borrar ventas:");
   if(code==='3336'){
     if(confirm('Borrar todas las ventas?')){
-      sales=[];
-      saveSales();
-      renderSales();
+      sales=[]; saveSales(); renderSales(); renderCloseResult();
     }
-  } else {
-    alert("Código incorrecto");
-  }
+  } else { alert("Código incorrecto"); }
 };
 
-// Export inventario (igual)
+/* Export inventario PDF */
 exportProductsBtn.onclick = ()=>{
   const doc = new jsPDF();
   doc.setFontSize(14);
@@ -516,7 +706,7 @@ exportProductsBtn.onclick = ()=>{
   doc.save('inventario.pdf');
 };
 
-// Export ventas del día en PDF (nuevo)
+/* Export ventas del día PDF */
 exportDailyBtn.onclick = ()=>{
   const dayKey = salesDateEl.value || todayKey();
   const { daySales, total, byMethod } = computeDayTotals(dayKey);
@@ -543,18 +733,17 @@ exportDailyBtn.onclick = ()=>{
   doc.save(`ventas_${dayKey}.pdf`);
 };
 
-// ======== COBRO + TICKET 80mm =========
+/* ===== COBRO + TICKET 80mm ===== */
 payBtn.onclick = ()=>{
   if(cart.length===0){alert('Carrito vacío'); return;}
 
   const client = clientNameEl.value.trim();
   const method = (payMethodEl.value || 'EFECTIVO').toUpperCase();
-  const currentTicket = ticketCounter; // ticket correcto para esta venta
-  const dayKey = salesDateEl.value || todayKey(); // se registra por la fecha seleccionada (normalmente hoy)
+  const currentTicket = ticketCounter;
+  const dayKey = salesDateEl.value || todayKey();
 
   let totalVenta=0;
 
-  // Validación y descarga stock (sin romper tu lógica)
   const ventaItems = cart.map(item=>{
     const prod = products[item.idx];
     if(item.qty>prod.stock){
@@ -568,7 +757,6 @@ payBtn.onclick = ()=>{
 
   saveProducts(); renderProducts();
 
-  // Guardar venta (manteniendo estructura original + method + dayKey)
   sales.push({
     ticket: currentTicket,
     client,
@@ -586,12 +774,11 @@ payBtn.onclick = ()=>{
   cart=[];
   renderCart();
   renderSales();
+  renderCloseResult();
 
-  // Generar ticket 80mm
   generateTicketPDF(ventaItems, totalVenta, client, currentTicket, method);
 };
 
-// ======== TICKET 80mm (VENTA) =========
 function generateTicketPDF(items,total,client,ticketNo,method){
   const doc = new jsPDF({unit:'mm', format:[80,300]});
   let y = 8;
@@ -659,7 +846,7 @@ function generateTicketPDF(items,total,client,ticketNo,method){
   }
 }
 
-// ======== CIERRE DE CAJA (CALCULAR + TICKET 80mm) =========
+/* ===== CIERRE DE CAJA ===== */
 function calculateClose(){
   const dayKey = salesDateEl.value || todayKey();
   const counted = {
@@ -700,7 +887,6 @@ calcCloseBtn.onclick = renderCloseResult;
 
 printCloseBtn.onclick = ()=>{
   const r = calculateClose();
-  // genera ticket 80mm
   generateCloseTicketPDF(r);
 };
 
@@ -725,19 +911,13 @@ function generateCloseTicketPDF(r){
     doc.line(4,y,76,y);
     y+=3;
   }
-
-  function row(label, valLeft, valRight){
+  function row(label, left, right){
     doc.setFont(undefined,'normal');
     doc.text(label,4,y);
-    if(valLeft !== null && valLeft !== undefined){
-      doc.text(String(valLeft),48,y,null,null,'left');
-    }
-    if(valRight !== null && valRight !== undefined){
-      doc.text(String(valRight),76,y,null,null,'right');
-    }
+    if(left!==null && left!==undefined) doc.text(String(left),50,y,null,null,'right');
+    if(right!==null && right!==undefined) doc.text(String(right),76,y,null,null,'right');
     y+=5;
   }
-
   function draw(){
     doc.setFontSize(13); doc.setFont(undefined,'bold');
     doc.text("CIERRE DE CAJA",40,y,null,null,'center'); y+=6;
@@ -750,7 +930,7 @@ function generateCloseTicketPDF(r){
 
     doc.setFont(undefined,'bold');
     doc.text("FORMA",4,y);
-    doc.text("ESPERADO",52,y,null,null,'right');
+    doc.text("ESPERADO",50,y,null,null,'right');
     doc.text("CONTADO",76,y,null,null,'right');
     y+=5;
     doc.setFont(undefined,'normal');
@@ -762,10 +942,10 @@ function generateCloseTicketPDF(r){
     line();
 
     doc.setFont(undefined,'bold');
-    row("TOTAL ESPERADO", null, formatQ(r.totalExpected));
-    row("TOTAL CONTADO", null, formatQ(r.totalCounted));
+    row("TOTAL ESP.", "", formatQ(r.totalExpected));
+    row("TOTAL CONT.", "", formatQ(r.totalCounted));
     const sign = (n)=> n>0 ? `+${formatQ(n)}` : formatQ(n);
-    row("DIFERENCIA", null, sign(r.totalDiff));
+    row("DIFERENCIA", "", sign(r.totalDiff));
     doc.setFont(undefined,'normal');
 
     if(r.note){
@@ -784,11 +964,11 @@ function generateCloseTicketPDF(r){
   }
 }
 
-// ======== INIT =========
+/* ===== INIT ===== */
 renderProducts();
 renderCart();
 renderSales();
-renderCloseResult(); // muestra resumen base
+renderCloseResult();
 </script>
 
 </body>
