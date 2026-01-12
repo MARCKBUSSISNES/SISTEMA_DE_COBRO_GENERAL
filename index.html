@@ -279,14 +279,35 @@ hr{border:none;border-top:1px solid #333;margin:14px 0;}
   <section id="view-inventario" class="view">
     <div class="card">
       <h2>Agregar producto</h2>
-      <label>Nombre</label><input id="p_name" type="text" placeholder="Ej: Polo blanco"/>
-      <label>Precio (Q)</label><input id="p_price" type="number" min="0" step="0.01"/>
-      <label>Stock</label><input id="p_stock" type="number" min="0" step="1"/>
+
+      <label>Descripción / Nombre</label>
+      <input id="p_name" type="text" placeholder="Ej: Polo blanco"/>
+
+      <div class="grid2">
+        <div>
+          <label>Precio de costo (Q)</label>
+          <input id="p_cost" type="number" min="0" step="0.01"/>
+        </div>
+        <div>
+          <label>Precio de venta (Q)</label>
+          <input id="p_price" type="number" min="0" step="0.01"/>
+        </div>
+      </div>
+
+      <label>Stock</label>
+      <input id="p_stock" type="number" min="0" step="1"/>
+
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
         <button id="addProductBtn" class="big-button">Agregar producto</button>
+        <button id="cancelEditBtn" class="ghost" style="display:none;">Cancelar edición</button>
         <button id="clearProductsBtn" class="danger">Borrar todo</button>
         <button id="exportProductsBtn" class="ghost">Descargar inventario PDF</button>
       </div>
+
+      <div id="editHint" class="small-note" style="margin-top:8px;display:none;">
+        Editando producto: <strong id="editNameLabel"></strong> (se guardará con código 3336)
+      </div>
+
       <hr/>
       <h3>Productos disponibles</h3>
       <ul id="productsList" class="list"></ul>
@@ -431,14 +452,29 @@ let sales = JSON.parse(localStorage.getItem(KEY_SALES)||'[]');
 let ticketCounter = parseInt(localStorage.getItem(KEY_TICKET)||'1',10);
 let cart = [];
 
+/* ==== MIGRACIÓN: asegurar campos cost/price/stock ==== */
+products = (products || []).map(p => ({
+  name: (p && p.name) ? p.name : '',
+  cost: isFinite(Number(p && p.cost)) ? Number(p.cost) : 0,
+  price: isFinite(Number(p && p.price)) ? Number(p.price) : 0,
+  stock: Number.isFinite(parseInt(p && p.stock,10)) ? parseInt(p.stock,10) : 0
+}));
+localStorage.setItem(KEY_PRODUCTS, JSON.stringify(products));
+
 /* INVENTARIO */
 const productsList = document.getElementById('productsList');
 const addProductBtn = document.getElementById('addProductBtn');
+const cancelEditBtn = document.getElementById('cancelEditBtn');
 const clearProductsBtn = document.getElementById('clearProductsBtn');
 const exportProductsBtn = document.getElementById('exportProductsBtn');
+
 const p_name = document.getElementById('p_name');
+const p_cost = document.getElementById('p_cost');
 const p_price = document.getElementById('p_price');
 const p_stock = document.getElementById('p_stock');
+
+const editHint = document.getElementById('editHint');
+const editNameLabel = document.getElementById('editNameLabel');
 
 /* BUSCAR PRODUCTO */
 const filterInput = document.getElementById('filterInput');
@@ -485,6 +521,26 @@ function dateKeyFromDate(d){
 function todayKey(){ return dateKeyFromDate(new Date()); }
 function safeNumber(x){ const n = Number(x); return isFinite(n) ? n : 0; }
 
+/* ===== EDICIÓN EN FORMULARIO ===== */
+let editingIndex = null;
+
+function resetProductForm(){
+  p_name.value = '';
+  p_cost.value = '';
+  p_price.value = '';
+  p_stock.value = '';
+  editingIndex = null;
+
+  addProductBtn.textContent = 'Agregar producto';
+  cancelEditBtn.style.display = 'none';
+  editHint.style.display = 'none';
+  editNameLabel.textContent = '';
+}
+
+cancelEditBtn.onclick = () => {
+  resetProductForm();
+};
+
 /* ===== PRODUCTOS ===== */
 function renderProducts(){
   productsList.innerHTML='';
@@ -497,7 +553,7 @@ function renderProducts(){
       li.innerHTML=`
         <div>
           <strong>${p.name}</strong> <span class="${stockClass}">(${p.stock})</span><br>
-          <span class="small-note">${formatQ(p.price)}</span>
+          <span class="small-note">Venta: ${formatQ(p.price)} | Costo: ${formatQ(p.cost)}</span>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
           <button onclick="addToCart(${idx},1)" ${p.stock===0?'disabled':''}>Agregar</button>
@@ -528,12 +584,33 @@ function renderProducts(){
 
 addProductBtn.onclick = ()=>{
   const name = p_name.value.trim();
+  const cost = parseFloat(p_cost.value)||0;
   const price = parseFloat(p_price.value)||0;
   const stock = parseInt(p_stock.value)||0;
-  if(!name){alert('Nombre requerido'); return;}
-  products.push({name,price,stock});
+
+  if(!name){ alert('Nombre requerido'); return; }
+  if(cost < 0 || price < 0 || stock < 0){ alert('Datos inválidos'); return; }
+
+  // Si está en modo edición: pedir 3336 y guardar cambios
+  if(editingIndex !== null){
+    const code = prompt("Ingrese código para guardar cambios:");
+    if(code !== '3336'){ alert("Código incorrecto"); return; }
+
+    products[editingIndex] = {
+      ...products[editingIndex],
+      name, cost, price, stock
+    };
+    saveProducts();
+    renderProducts();
+    resetProductForm();
+    alert("Producto actualizado.");
+    return;
+  }
+
+  // Modo normal: agregar
+  products.push({name, cost, price, stock});
   saveProducts(); renderProducts();
-  p_name.value=''; p_price.value=''; p_stock.value='';
+  p_name.value=''; p_cost.value=''; p_price.value=''; p_stock.value='';
 };
 
 clearProductsBtn.onclick = ()=>{
@@ -541,18 +618,24 @@ clearProductsBtn.onclick = ()=>{
   if(code==='3336'){
     if(confirm('Borrar todos los productos?')){
       products=[]; saveProducts(); renderProducts();
+      resetProductForm();
     }
   } else { alert("Código incorrecto"); }
 };
 
 function deleteProduct(idx){
   const code = prompt("Ingrese código para borrar producto:");
-  if(code==='3336'){ products.splice(idx,1); saveProducts(); renderProducts(); }
-  else { alert("Código incorrecto"); }
+  if(code==='3336'){
+    products.splice(idx,1);
+    saveProducts();
+    renderProducts();
+    if(editingIndex === idx){ resetProductForm(); }
+    else if(editingIndex !== null && idx < editingIndex){ editingIndex -= 1; }
+  } else { alert("Código incorrecto"); }
 }
 window.deleteProduct = deleteProduct;
 
-/* ===== NUEVO: EDITAR PRODUCTO (pide 3336) ===== */
+/* ===== EDITAR PRODUCTO (carga al formulario, pide 3336) ===== */
 function editProduct(idx){
   const code = prompt("Ingrese código para editar producto:");
   if(code !== '3336'){
@@ -562,26 +645,19 @@ function editProduct(idx){
 
   const p = products[idx];
 
-  const newName = prompt("Nombre del producto:", p.name);
-  if(newName === null) return;
-  const name = newName.trim();
-  if(!name){ alert("Nombre inválido"); return; }
+  // Cambia a módulo inventario y carga datos
+  switchView('inventario');
 
-  const newPriceStr = prompt("Precio (Q):", String(p.price));
-  if(newPriceStr === null) return;
-  const price = parseFloat(newPriceStr);
-  if(!isFinite(price) || price < 0){ alert("Precio inválido"); return; }
+  editingIndex = idx;
+  p_name.value = p.name || '';
+  p_cost.value = (p.cost ?? 0);
+  p_price.value = (p.price ?? 0);
+  p_stock.value = (p.stock ?? 0);
 
-  const newStockStr = prompt("Stock:", String(p.stock));
-  if(newStockStr === null) return;
-  const stock = parseInt(newStockStr, 10);
-  if(!Number.isFinite(stock) || stock < 0){ alert("Stock inválido"); return; }
-
-  products[idx] = { ...p, name, price, stock };
-  saveProducts();
-  renderProducts();
-
-  try{ renderCart(); }catch(e){}
+  addProductBtn.textContent = 'Guardar cambios';
+  cancelEditBtn.style.display = 'inline-block';
+  editHint.style.display = 'block';
+  editNameLabel.textContent = p.name || '';
 }
 window.editProduct = editProduct;
 
@@ -637,7 +713,13 @@ function addToCart(idx, qty){
     if(exist.qty+qty>prod.stock){alert('No hay suficiente stock'); return;}
     exist.qty += qty;
   }else{
-    cart.push({idx,name:prod.name,price:prod.price,qty});
+    cart.push({
+      idx,
+      name: prod.name,
+      price: prod.price,
+      cost: prod.cost,      // 👈 guardamos costo también para el registro
+      qty
+    });
   }
   renderCart();
 }
@@ -673,16 +755,24 @@ function salesOfDay(dayKey){
 function computeDayTotals(dayKey){
   const daySales = salesOfDay(dayKey);
   let total=0;
+  let totalCost=0;
+
   const byMethod = { EFECTIVO:0, TARJETA:0, TRANSFERENCIA:0 };
 
   daySales.forEach(s=>{
     total += safeNumber(s.total);
+
+    // costo vendido del ticket
+    totalCost += safeNumber(s.totalCost);
+
     const m = (s.method || 'EFECTIVO').toUpperCase();
     if(byMethod[m] === undefined) byMethod[m] = 0;
     byMethod[m] += safeNumber(s.total);
   });
 
-  return { count: daySales.length, total, byMethod, daySales };
+  const profit = total - totalCost;
+
+  return { count: daySales.length, total, totalCost, profit, byMethod, daySales };
 }
 
 function renderSales(){
@@ -700,7 +790,10 @@ function renderSales(){
       li.innerHTML = `
         <div>
           Ticket ${s.ticket} - ${clientTxt} - ${formatQ(s.total)}
-          <div class="small-note"><span class="pill">${method}</span> <span class="small-note">${new Date(s.date).toLocaleString()}</span></div>
+          <div class="small-note">
+            <span class="pill">${method}</span>
+            <span class="small-note">${new Date(s.date).toLocaleString()}</span>
+          </div>
         </div>
       `;
       salesList.appendChild(li);
@@ -735,33 +828,37 @@ exportProductsBtn.onclick = ()=>{
   const doc = new jsPDF();
   doc.setFontSize(14);
   doc.text('Inventario de productos',20,20);
-  const rows = products.map(p=>[p.name, formatQ(p.price), p.stock]);
-  doc.autoTable({head:[['Producto','Precio','Stock']], body:rows, startY:30});
+  const rows = products.map(p=>[p.name, formatQ(p.cost), formatQ(p.price), p.stock]);
+  doc.autoTable({head:[['Producto','Costo','Venta','Stock']], body:rows, startY:30});
   doc.save('inventario.pdf');
 };
 
 /* Export ventas del día PDF */
 exportDailyBtn.onclick = ()=>{
   const dayKey = salesDateEl.value || todayKey();
-  const { daySales, total, byMethod } = computeDayTotals(dayKey);
+  const { daySales, total, byMethod, totalCost, profit } = computeDayTotals(dayKey);
 
   const doc = new jsPDF();
   doc.setFontSize(14);
   doc.text(`Ventas del día: ${dayKey}`, 20, 20);
+
   doc.setFontSize(10);
-  doc.text(`Total: ${formatQ(total)}`, 20, 28);
-  doc.text(`Efectivo: ${formatQ(byMethod.EFECTIVO)}  |  Tarjeta: ${formatQ(byMethod.TARJETA)}  |  Transferencia: ${formatQ(byMethod.TRANSFERENCIA)}`, 20, 34);
+  doc.text(`Total ventas: ${formatQ(total)}`, 20, 28);
+  doc.text(`Costo vendido: ${formatQ(totalCost)}  |  Ganancia bruta: ${formatQ(profit)}`, 20, 34);
+  doc.text(`Efectivo: ${formatQ(byMethod.EFECTIVO)}  |  Tarjeta: ${formatQ(byMethod.TARJETA)}  |  Transferencia: ${formatQ(byMethod.TRANSFERENCIA)}`, 20, 40);
 
   const rows = daySales.map(s=>{
     const method = (s.method || 'EFECTIVO').toUpperCase();
     const client = s.client || 'Cliente';
-    return [String(s.ticket), client, method, formatQ(s.total), new Date(s.date).toLocaleTimeString()];
+    const cost = safeNumber(s.totalCost);
+    const prof = safeNumber(s.total) - cost;
+    return [String(s.ticket), client, method, formatQ(s.total), formatQ(cost), formatQ(prof), new Date(s.date).toLocaleTimeString()];
   });
 
   doc.autoTable({
-    head:[['Ticket','Cliente','Pago','Total','Hora']],
+    head:[['Ticket','Cliente','Pago','Venta','Costo','Ganancia','Hora']],
     body:rows,
-    startY:42
+    startY:48
   });
 
   doc.save(`ventas_${dayKey}.pdf`);
@@ -777,6 +874,7 @@ payBtn.onclick = ()=>{
   const dayKey = salesDateEl.value || todayKey();
 
   let totalVenta=0;
+  let totalCost=0;
 
   const ventaItems = cart.map(item=>{
     const prod = products[item.idx];
@@ -785,7 +883,13 @@ payBtn.onclick = ()=>{
       return null;
     }
     prod.stock -= item.qty;
+
     totalVenta += item.qty * item.price;
+
+    // costo vendido: qty * costo
+    const c = safeNumber(item.cost);
+    totalCost += item.qty * c;
+
     return {...item};
   }).filter(Boolean);
 
@@ -797,6 +901,7 @@ payBtn.onclick = ()=>{
     method,
     items: ventaItems,
     total: totalVenta,
+    totalCost: totalCost,          // 👈 guardamos costo total del ticket
     dayKey,
     date: new Date().toISOString()
   });
@@ -861,7 +966,7 @@ function generateTicketPDF(items,total,client,ticketNo,method){
     doc.text(`Fecha: ${new Date().toLocaleString()}`, 10, y);
     y += 12;
 
-    // ===== ENCABEZADO DE TABLA (AHORA CON P. UNIT) =====
+    // ===== ENCABEZADO DE TABLA (con P. UNIT) =====
     doc.setFontSize(14);
     doc.setFont(undefined,'bold');
     doc.text("Cant", 10, y);
@@ -875,7 +980,7 @@ function generateTicketPDF(items,total,client,ticketNo,method){
     doc.line(10, y, rightX, y);
     y += 4;
 
-    // ===== PRODUCTOS (AHORA CON PRECIO UNITARIO) =====
+    // ===== PRODUCTOS (con precio unitario) =====
     doc.setFontSize(13);
     items.forEach(item=>{
       const qtyText = item.qty.toString();
@@ -919,7 +1024,9 @@ function calculateClose(){
     TARJETA: safeNumber(closeCardEl.value),
     TRANSFERENCIA: safeNumber(closeTransferEl.value)
   };
-  const expected = computeDayTotals(dayKey).byMethod;
+
+  const computed = computeDayTotals(dayKey);
+  const expected = computed.byMethod;
 
   const diff = {
     EFECTIVO: counted.EFECTIVO - safeNumber(expected.EFECTIVO),
@@ -931,7 +1038,18 @@ function calculateClose(){
   const totalCounted = counted.EFECTIVO+counted.TARJETA+counted.TRANSFERENCIA;
   const totalDiff = totalCounted - totalExpected;
 
-  return { dayKey, counted, expected, diff, totalExpected, totalCounted, totalDiff, note: (closeNoteEl.value||'').trim() };
+  return {
+    dayKey,
+    counted,
+    expected,
+    diff,
+    totalExpected,
+    totalCounted,
+    totalDiff,
+    totalCost: safeNumber(computed.totalCost),
+    profit: safeNumber(computed.profit),
+    note: (closeNoteEl.value||'').trim()
+  };
 }
 
 function renderCloseResult(){
@@ -945,6 +1063,10 @@ function renderCloseResult(){
       <span class="pill">TARJETA ${sign(r.diff.TARJETA)}</span>
       <span class="pill">TRANSFERENCIA ${sign(r.diff.TRANSFERENCIA)}</span>
     </div>
+    <div style="margin-top:10px;">
+      <div><strong>Costo vendido (día):</strong> ${formatQ(r.totalCost)}</div>
+      <div><strong>Ganancia bruta (día):</strong> ${formatQ(r.profit)}</div>
+    </div>
   `;
 }
 
@@ -956,7 +1078,7 @@ printCloseBtn.onclick = ()=>{
 };
 
 function generateCloseTicketPDF(r){
-  const doc = new jsPDF({unit:'mm', format:[80,260]});
+  const doc = new jsPDF({unit:'mm', format:[80,270]});
   let y = 8;
 
   const img = new Image();
@@ -1013,6 +1135,13 @@ function generateCloseTicketPDF(r){
     row("DIFERENCIA", "", sign(r.totalDiff));
     doc.setFont(undefined,'normal');
 
+    // ===== NUEVO: COSTO Y GANANCIA =====
+    y+=1; line();
+    doc.setFont(undefined,'bold');
+    row("COSTO VEND.", "", formatQ(r.totalCost));
+    row("GANANCIA", "", formatQ(r.profit));
+    doc.setFont(undefined,'normal');
+
     if(r.note){
       y+=2; line();
       doc.setFontSize(8);
@@ -1034,6 +1163,7 @@ renderProducts();
 renderCart();
 renderSales();
 renderCloseResult();
+resetProductForm();
 </script>
 
 </body>
